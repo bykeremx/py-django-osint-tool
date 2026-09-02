@@ -1,0 +1,8 @@
+/* DNS recon */
+.page-dns-scan section {
+    min-width: 0;
+}
+
+.page-dns-scan pre {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+}

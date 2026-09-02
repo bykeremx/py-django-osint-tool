@@ -1,0 +1,45 @@
+<header class="app-topbar flex items-center gap-3 md:gap-4 sticky top-0 z-30 shrink-0 min-h-[3.25rem] px-4 md:px-5 py-2 bg-zinc-950/95 border-b border-zinc-800 backdrop-blur-sm" id="app-topbar">
+    <div class="app-topbar__left flex items-center gap-2.5 shrink-0">
+        <button type="button" id="sidebar-toggle"
+                class="app-topbar__menu-btn inline-flex items-center justify-center w-9 h-9 rounded-md border border-zinc-700 bg-zinc-900 text-zinc-200 hover:bg-zinc-800"
+                aria-label="Menüyü aç/kapat" aria-expanded="true">
+            <span class="material-symbols-outlined">menu</span>
+        </button>
+        <div class="app-topbar__title hidden sm:block">
+            <p class="text-[10px] tracking-[0.25em] text-zinc-500 uppercase leading-none">Operasyon izleme</p>
+            <p class="font-display text-sm text-zinc-200 tracking-wide mt-0.5">CYBER OPS</p>
+        </div>
+    </div>
+
+    <div class="app-topbar__ops flex-1 min-w-0 overflow-hidden" id="topbar-ops" aria-live="polite">
+        <div class="topbar-ops-idle inline-flex items-center gap-1.5 text-[11px] text-zinc-500 whitespace-nowrap" id="topbar-ops-idle">
+            <span class="material-symbols-outlined text-base text-emerald-400">check_circle</span>
+            {% if scan_queue_enabled %}
+            <span>Kuyruk hazır{% if scan_queue_pending %} · {{ scan_queue_pending }} aktif tarama{% endif %}</span>
+            {% else %}
+            <span>İşlem kuyruğu kapalı · taramalar senkron</span>
+            {% endif %}
+        </div>
+        <div class="topbar-ops-track flex items-center gap-2 overflow-x-auto pb-0.5" id="topbar-ops-track" hidden></div>
+    </div>
+
+    <div class="app-topbar__right flex items-center gap-2 shrink-0">
+        <span class="topbar-pending-badge inline-flex items-center gap-1.5 text-[10px] uppercase tracking-wide text-amber-200 border border-amber-800/50 bg-amber-950/30 px-2 py-0.5 rounded-full" id="topbar-pending-badge" hidden>
+            <span class="topbar-pending-badge__dot w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+            <span id="topbar-pending-count">0</span> aktif
+        </span>
+        <button type="button" id="theme-toggle"
+                class="inline-flex items-center justify-center w-8 h-8 rounded-md border border-transparent text-zinc-400 hover:text-white hover:border-zinc-700"
+                aria-label="Açık moda geç" title="Light mode">
+            <span class="material-symbols-outlined text-base">light_mode</span>
+        </button>
+        <a href="{% url 'dashboard' %}" class="app-topbar__dash-link inline-flex items-center justify-center w-8 h-8 rounded-md text-zinc-400 hover:text-white hover:border hover:border-zinc-700" title="Komuta paneli">
+            <span class="material-symbols-outlined text-base">dashboard</span>
+        </a>
+    </div>
+</header>
+<script>
+    window.SCAN_JOBS_ACTIVE_URL = "{% url 'scan_jobs_active' %}";
+    window.SCAN_JOB_CANCEL_URL = "{% url 'scan_job_cancel' '__JOB_ID__' %}";
+    window.SCAN_JOBS_CANCEL_ALL_URL = "{% url 'scan_jobs_cancel_all' %}";
+</script>

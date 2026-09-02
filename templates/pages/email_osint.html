@@ -1,0 +1,402 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Email OSINT | CYBER OPS{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/pages/email_osint.css' %}?v=2">
+{% endblock %}
+
+{% block content %}
+<div class="page-email-osint">
+    <div class="mb-8">
+        <p class="text-[10px] tracking-[0.3em] text-zinc-500 uppercase">Modül 05</p>
+        <h2 class="font-display text-3xl font-bold tracking-wide flex items-center gap-2 mt-1">
+            <span class="material-symbols-outlined text-emerald-400">mail</span>
+            Email OSINT
+        </h2>
+        <p class="text-zinc-500 text-sm mt-2">Domain ayak izi + 120+ sitede hesap varlığı kontrolü</p>
+    </div>
+
+    <div class="space-y-6">
+        <section class="bg-zinc-950 border border-zinc-800 rounded-lg p-5 max-w-2xl">
+            <h3 class="font-display text-lg text-zinc-100 flex items-center gap-2">
+                <span class="material-symbols-outlined text-zinc-500">alternate_email</span>
+                Hedef e-posta
+            </h3>
+            <p class="text-xs text-zinc-500 mt-1 mb-4">Yalnızca yetkili hedefler. Tam tarama 30–90 saniye sürebilir.</p>
+            <form action="{% url 'email_osint' %}" method="post" data-scan-queue class="flex gap-2 scan-queue-form">
+                {% csrf_token %}
+                <input type="email" name="email" value="{{ email|default:'' }}" placeholder="hedef@example.com" required
+                    class="flex-1 rounded-md border border-zinc-800 bg-black px-3 py-2 text-sm text-zinc-100 placeholder-zinc-600 focus:border-zinc-500 focus:outline-none">
+                <button type="submit" class="inline-flex items-center gap-1 shrink-0 rounded-md bg-zinc-100 px-4 py-2 text-sm text-zinc-900 hover:bg-white">
+                    <span class="material-symbols-outlined text-base">search</span>
+                    Tara
+                </button>
+            </form>
+        </section>
+
+        {% if error %}
+        <div class="rounded-lg border border-red-900 bg-red-950/50 p-5 text-sm text-red-200 flex gap-2 max-w-2xl">
+            <span class="material-symbols-outlined text-red-400 shrink-0">error</span>
+            <p>{{ error }}</p>
+        </div>
+        {% endif %}
+
+        {% if result and not result.error %}
+
+        {% include 'partials/analiz_kaydet.html' %}
+
+        {# —— Özet şerit —— #}
+        <section class="bg-zinc-950 border border-zinc-800 rounded-lg p-5">
+            <div class="flex flex-wrap items-start justify-between gap-4">
+                <div>
+                    <p class="text-xs text-zinc-500">Analiz edilen adres</p>
+                    <p class="font-display text-xl text-zinc-100 break-all">{{ result.email }}</p>
+                </div>
+                <div class="flex flex-wrap gap-3 text-xs">
+                    <span class="inline-flex items-center gap-1.5 rounded border border-zinc-700 px-2.5 py-1 text-zinc-400">
+                        <span class="material-symbols-outlined text-sm">schedule</span>
+                        {{ result.elapsed_seconds }} sn
+                    </span>
+                    <span class="inline-flex items-center gap-1.5 rounded border border-emerald-900/60 bg-emerald-950/30 px-2.5 py-1 text-emerald-300">
+                        <span class="material-symbols-outlined text-sm">checklist</span>
+                        2 aşama tamamlandı
+                    </span>
+                </div>
+            </div>
+        </section>
+
+        {# —— AŞAMA 1: Footprint —— #}
+        <div>
+            <div class="flex items-center gap-3 mb-3">
+                <span class="phase-badge">Aşama 1</span>
+                <h3 class="font-display text-lg text-zinc-100">E-posta ayak izi (domain &amp; DNS)</h3>
+            </div>
+            <p class="text-xs text-zinc-500 mb-4 max-w-3xl">
+                Adresin <strong class="text-zinc-400">@ sonrası domain</strong> üzerinden posta altyapısı, güvenlik kayıtları ve Gravatar profili incelenir.
+            </p>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                <section class="bg-zinc-950 border border-zinc-800 rounded-lg p-5">
+                    <h4 class="font-display text-base text-zinc-100 mb-3 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-zinc-500 text-lg">person</span>
+                        Adres yapısı
+                    </h4>
+                    <dl class="space-y-2 text-sm">
+                        <div class="grid grid-cols-[8rem_1fr] gap-2">
+                            <dt class="text-zinc-500">Kullanıcı adı</dt>
+                            <dd class="break-all font-mono text-zinc-200">{{ result.validation.local_part }}</dd>
+                        </div>
+                        <div class="grid grid-cols-[8rem_1fr] gap-2">
+                            <dt class="text-zinc-500">Domain</dt>
+                            <dd class="break-all font-mono text-zinc-200">{{ result.validation.domain }}</dd>
+                        </div>
+                        <div class="grid grid-cols-[8rem_1fr] gap-2">
+                            <dt class="text-zinc-500">Sağlayıcı tipi</dt>
+                            <dd>
+                                {% if result.validation.provider_type == "free" %}Ücretsiz (Gmail, Outlook vb.)
+                                {% elif result.validation.provider_type == "education" %}Eğitim (.edu)
+                                {% elif result.validation.provider_type == "government" %}Devlet / resmi
+                                {% else %}Özel / kurumsal{% endif %}
+                            </dd>
+                        </div>
+                        <div class="grid grid-cols-[8rem_1fr] gap-2">
+                            <dt class="text-zinc-500">Kurumsal adres</dt>
+                            <dd>{% if result.validation.is_role_address %}Evet (info@, admin@ vb.){% else %}Hayır{% endif %}</dd>
+                        </div>
+                        {% if result.validation.local_hints %}
+                        <div class="grid grid-cols-[8rem_1fr] gap-2">
+                            <dt class="text-zinc-500">Notlar</dt>
+                            <dd class="text-zinc-400">{{ result.validation.local_hints|join:" · " }}</dd>
+                        </div>
+                        {% endif %}
+                    </dl>
+                </section>
+
+                <section class="bg-zinc-950 border border-zinc-800 rounded-lg p-5">
+                    <h4 class="font-display text-base text-zinc-100 mb-3 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-zinc-500 text-lg">dns</span>
+                        Posta sunucuları (MX)
+                    </h4>
+                    {% if result.footprint.mx.available %}
+                    <ul class="space-y-2 text-sm">
+                        {% for mx in result.footprint.mx.records %}
+                        <li class="flex gap-2 border-b border-zinc-800/80 pb-1.5">
+                            <span class="text-zinc-500 w-8 shrink-0">{{ mx.priority }}</span>
+                            <span class="text-zinc-300 break-all font-mono text-xs">{{ mx.host }}</span>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    {% if result.footprint.mail_infrastructure %}
+                    <p class="text-xs text-zinc-500 mt-3">Tahmini altyapı: <span class="text-zinc-400">{{ result.footprint.mail_infrastructure|join:", " }}</span></p>
+                    {% endif %}
+                    {% else %}
+                    <p class="text-sm text-zinc-600">{{ result.footprint.mx.error|default:"MX kaydı bulunamadı." }}</p>
+                    {% endif %}
+                </section>
+
+                <section class="bg-zinc-950 border border-zinc-800 rounded-lg p-5">
+                    <h4 class="font-display text-base text-zinc-100 mb-3 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-zinc-500 text-lg">verified_user</span>
+                        SPF &amp; DMARC
+                    </h4>
+                    <dl class="space-y-3 text-sm">
+                        <div>
+                            <dt class="text-zinc-500 text-xs mb-1">SPF — kim mail gönderebilir?</dt>
+                            <dd class="text-zinc-300 break-all text-xs font-mono bg-zinc-900/50 rounded p-2">{% if result.footprint.spf.available %}{{ result.footprint.spf.record }}{% else %}Kayıt yok{% endif %}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-zinc-500 text-xs mb-1">DMARC — sahtecilik politikası</dt>
+                            <dd class="text-zinc-300 break-all text-xs font-mono bg-zinc-900/50 rounded p-2">{% if result.footprint.dmarc.available %}{{ result.footprint.dmarc.record }}{% else %}{{ result.footprint.dmarc.error|default:"Kayıt yok" }}{% endif %}</dd>
+                            {% if result.footprint.dmarc.policy %}
+                            <p class="text-xs text-amber-400/90 mt-1">Politika: <strong>{{ result.footprint.dmarc.policy }}</strong></p>
+                            {% endif %}
+                        </div>
+                    </dl>
+                </section>
+
+                <section class="bg-zinc-950 border border-zinc-800 rounded-lg p-5">
+                    <h4 class="font-display text-base text-zinc-100 mb-3 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-zinc-500 text-lg">account_circle</span>
+                        Gravatar profili
+                    </h4>
+                    {% if result.footprint.gravatar.exists %}
+                    <div class="flex items-start gap-4">
+                        <img src="{{ result.footprint.gravatar.avatar_url }}" alt="Gravatar" class="w-16 h-16 rounded border border-zinc-700 bg-black object-cover">
+                        <div class="text-sm">
+                            <p class="text-emerald-400 font-medium">Profil mevcut</p>
+                            <p class="text-xs text-zinc-500 mt-1">Bu e-posta Gravatar'da kayıtlı olabilir.</p>
+                            <a href="{{ result.footprint.gravatar.profile_url }}" target="_blank" rel="noopener" class="inline-flex items-center gap-1 mt-2 text-xs text-zinc-400 hover:text-zinc-200">
+                                <span class="material-symbols-outlined text-sm">open_in_new</span>
+                                Profili aç
+                            </a>
+                        </div>
+                    </div>
+                    {% else %}
+                    <p class="text-sm text-zinc-600">Gravatar'da profil bulunamadı.</p>
+                    {% endif %}
+                </section>
+
+                <section class="bg-zinc-950 border border-zinc-800 rounded-lg p-5 md:col-span-2 xl:col-span-1">
+                    <h4 class="font-display text-base text-zinc-100 mb-3 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-zinc-500 text-lg">public</span>
+                        Domain WHOIS
+                    </h4>
+                    {% if result.footprint.whois.available %}
+                    <dl class="space-y-2 text-sm">
+                        <div class="grid grid-cols-[5.5rem_1fr] gap-2"><dt class="text-zinc-500">Registrar</dt><dd class="break-all">{{ result.footprint.whois.registrar }}</dd></div>
+                        {% if result.footprint.whois.created %}
+                        <div class="grid grid-cols-[5.5rem_1fr] gap-2"><dt class="text-zinc-500">Kayıt</dt><dd>{{ result.footprint.whois.created }}</dd></div>
+                        {% endif %}
+                        {% if result.footprint.whois.expires %}
+                        <div class="grid grid-cols-[5.5rem_1fr] gap-2"><dt class="text-zinc-500">Bitiş</dt><dd>{{ result.footprint.whois.expires }}</dd></div>
+                        {% endif %}
+                    </dl>
+                    {% else %}
+                    <p class="text-sm text-zinc-600">{{ result.footprint.whois.error|default:"WHOIS bilgisi alınamadı." }}</p>
+                    {% endif %}
+                    {% if result.footprint.disposable_domain %}
+                    <p class="text-xs text-amber-400 mt-3 flex items-center gap-1">
+                        <span class="material-symbols-outlined text-sm">warning</span>
+                        Geçici / disposable mail domain listesinde
+                    </p>
+                    {% endif %}
+                </section>
+            </div>
+        </div>
+
+        {# —— AŞAMA 2: Hesap taraması —— #}
+        {% if result.accounts %}
+        <div>
+            <div class="flex items-center gap-3 mb-3">
+                <span class="phase-badge">Aşama 2</span>
+                <h3 class="font-display text-lg text-zinc-100">Hesap varlığı taraması (holehe)</h3>
+            </div>
+
+            <section class="bg-zinc-950 border border-zinc-800 rounded-lg p-5 mb-4">
+                <h4 class="text-sm text-zinc-300 font-medium mb-3 flex items-center gap-2">
+                    <span class="material-symbols-outlined text-amber-400 text-base">info</span>
+                    Sonuçlar nasıl okunur?
+                </h4>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs text-zinc-400">
+                    <div class="flex gap-2 items-start rounded border border-zinc-800 bg-zinc-900/40 p-3">
+                        <span class="legend-dot bg-emerald-400 mt-1"></span>
+                        <div>
+                            <p class="text-emerald-400 font-medium mb-0.5">Hesap var</p>
+                            <p>Siteye istek gitti ve e-posta <strong class="text-zinc-300">kayıtlı</strong> görünüyor.</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-2 items-start rounded border border-zinc-800 bg-zinc-900/40 p-3">
+                        <span class="legend-dot bg-zinc-500 mt-1"></span>
+                        <div>
+                            <p class="text-zinc-300 font-medium mb-0.5">Hesap yok</p>
+                            <p>Siteye istek gitti ve e-posta <strong class="text-zinc-300">kayıtlı değil</strong> denildi.</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-2 items-start rounded border border-zinc-800 bg-zinc-900/40 p-3">
+                        <span class="legend-dot bg-amber-500 mt-1"></span>
+                        <div>
+                            <p class="text-amber-300 font-medium mb-0.5">Belirsiz</p>
+                            <p>Siteye istek gitti ama cevap alınamadı (rate limit, hata, bot koruması).</p>
+                        </div>
+                    </div>
+                </div>
+                <p class="text-[11px] text-zinc-600 mt-3">
+                    Tüm sitelere istek atılır. Toplam = Hesap var + Hesap yok + Belirsiz.
+                </p>
+            </section>
+
+            <section class="bg-zinc-950 border border-zinc-800 rounded-lg p-5">
+                <div class="flex flex-wrap items-end justify-between gap-4 mb-4">
+                    <div>
+                        <p class="text-xs text-zinc-500">Sorgulanan site</p>
+                        <p class="text-3xl font-display font-bold text-zinc-100">{{ result.accounts.summary.queried_count }}</p>
+                    </div>
+                    <div class="flex flex-wrap gap-5 text-sm">
+                        <div>
+                            <p class="text-xs text-zinc-500 flex items-center gap-1"><span class="legend-dot bg-emerald-400"></span> Hesap var</p>
+                            <p class="text-xl font-display text-emerald-400">{{ result.accounts.summary.found_count }}</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-zinc-500 flex items-center gap-1"><span class="legend-dot bg-zinc-500"></span> Hesap yok</p>
+                            <p class="text-xl font-display text-zinc-400">{{ result.accounts.summary.not_found_count }}</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-zinc-500 flex items-center gap-1"><span class="legend-dot bg-amber-500"></span> Belirsiz</p>
+                            <p class="text-xl font-display text-amber-400">{{ result.accounts.summary.unclear_count }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                {% if result.accounts.total_checked %}
+                <div class="scan-bar mb-6" title="Dağılım: yeşil=var, gri=yok, turuncu=belirsiz">
+                    <span class="bg-emerald-500" style="width: {% widthratio result.accounts.summary.found_count result.accounts.total_checked 100 %}%"></span>
+                    <span class="bg-zinc-600" style="width: {% widthratio result.accounts.summary.not_found_count result.accounts.total_checked 100 %}%"></span>
+                    <span class="bg-amber-500" style="width: {% widthratio result.accounts.summary.unclear_count result.accounts.total_checked 100 %}%"></span>
+                </div>
+                {% endif %}
+
+                <div class="flex flex-wrap gap-2 mb-4">
+                    <button type="button" class="account-tab is-active" data-account-tab="found">
+                        Hesap var ({{ result.accounts.summary.found_count }})
+                    </button>
+                    <button type="button" class="account-tab" data-account-tab="not_found">
+                        Hesap yok ({{ result.accounts.summary.not_found_count }})
+                    </button>
+                    <button type="button" class="account-tab" data-account-tab="unclear">
+                        Belirsiz ({{ result.accounts.summary.unclear_count }})
+                    </button>
+                </div>
+
+                {# Panel: Hesap var #}
+                <div class="account-panel is-active" data-account-panel="found">
+                    {% if result.accounts.found %}
+                    <div class="overflow-auto max-h-[28rem] border border-emerald-900/40 rounded">
+                        <table class="w-full text-sm text-left">
+                            <thead class="text-xs text-zinc-500 uppercase bg-zinc-900/80 sticky top-0">
+                                <tr>
+                                    <th class="px-3 py-2">Platform</th>
+                                    <th class="px-3 py-2">Domain</th>
+                                    <th class="px-3 py-2">Ek bilgi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for acc in result.accounts.found %}
+                                <tr class="border-t border-zinc-800/80 hover:bg-emerald-950/20">
+                                    <td class="px-3 py-2 text-emerald-400 font-medium">{{ acc.name }}</td>
+                                    <td class="px-3 py-2 text-zinc-300">{{ acc.domain }}</td>
+                                    <td class="px-3 py-2 text-zinc-400 text-xs break-all">
+                                        {% if acc.emailrecovery %}Kurtarma: {{ acc.emailrecovery }}{% endif %}
+                                        {% if acc.phone_number %}{% if acc.emailrecovery %} · {% endif %}Tel: {{ acc.phone_number }}{% endif %}
+                                        {% if acc.others %}{% for k,v in acc.others.items %}{% if acc.emailrecovery or acc.phone_number %} · {% endif %}{{ k }}: {{ v }}{% endfor %}{% endif %}
+                                        {% if not acc.emailrecovery and not acc.phone_number and not acc.others %}—{% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-sm text-zinc-600 py-6 text-center border border-dashed border-zinc-800 rounded">
+                        Bu e-posta için kayıtlı hesap tespit edilmedi.
+                    </p>
+                    {% endif %}
+                </div>
+
+                {# Panel: Hesap yok #}
+                <div class="account-panel" data-account-panel="not_found">
+                    {% if result.accounts.not_found %}
+                    <p class="text-xs text-zinc-500 mb-2">Bu sitelerde e-posta kayıtlı <strong class="text-zinc-400">değil</strong> — istek başarılı, sonuç net.</p>
+                    <div class="overflow-auto max-h-[28rem] border border-zinc-800 rounded">
+                        <table class="w-full text-sm text-left">
+                            <thead class="text-xs text-zinc-500 uppercase bg-zinc-900/80 sticky top-0">
+                                <tr>
+                                    <th class="px-3 py-2">Platform</th>
+                                    <th class="px-3 py-2">Domain</th>
+                                    <th class="px-3 py-2">Durum</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for acc in result.accounts.not_found %}
+                                <tr class="border-t border-zinc-800/80 hover:bg-zinc-900/40">
+                                    <td class="px-3 py-2 text-zinc-400">{{ acc.name }}</td>
+                                    <td class="px-3 py-2 text-zinc-500">{{ acc.domain }}</td>
+                                    <td class="px-3 py-2 text-zinc-600 text-xs">Kayıtlı değil</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-sm text-zinc-600 py-6 text-center border border-dashed border-zinc-800 rounded">
+                        “Hesap yok” dönen site yok (hepsi belirsiz veya hesap var olabilir).
+                    </p>
+                    {% endif %}
+                </div>
+
+                {# Panel: Belirsiz #}
+                <div class="account-panel" data-account-panel="unclear">
+                    {% if result.accounts.rate_limited %}
+                    <p class="text-xs text-amber-400/80 mb-2 flex items-start gap-2">
+                        <span class="material-symbols-outlined text-sm shrink-0 mt-0.5">warning</span>
+                        Bu sitelere <strong>istek atıldı</strong> ancak net sonuç alınamadı. Sebep: rate limit, timeout, API değişikliği veya bot koruması olabilir.
+                    </p>
+                    <div class="overflow-auto max-h-[28rem] border border-amber-900/30 rounded">
+                        <table class="w-full text-sm text-left">
+                            <thead class="text-xs text-zinc-500 uppercase bg-zinc-900/80 sticky top-0">
+                                <tr>
+                                    <th class="px-3 py-2">Platform</th>
+                                    <th class="px-3 py-2">Domain</th>
+                                    <th class="px-3 py-2">Durum</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for acc in result.accounts.rate_limited %}
+                                <tr class="border-t border-zinc-800/80 hover:bg-amber-950/10">
+                                    <td class="px-3 py-2 text-amber-300/90">{{ acc.name }}</td>
+                                    <td class="px-3 py-2 text-zinc-400">{{ acc.domain }}</td>
+                                    <td class="px-3 py-2 text-amber-500/80 text-xs">Yanıt alınamadı</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-sm text-zinc-600 py-6 text-center border border-dashed border-zinc-800 rounded">
+                        Belirsiz sonuç dönen site yok — tüm siteler net cevap verdi.
+                    </p>
+                    {% endif %}
+                </div>
+            </section>
+        </div>
+        {% endif %}
+
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/email_osint.js' %}"></script>
+{% endblock %}

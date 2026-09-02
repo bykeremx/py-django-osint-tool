@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Analiz #{{ analiz.pk }} | CYBER OPS{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl space-y-6">
+    <div>
+        <p class="text-[10px] tracking-[0.3em] text-zinc-500 uppercase">Analiz raporu</p>
+        <h2 class="font-display text-2xl text-zinc-100 mt-1">#{{ analiz.pk }} · {{ analiz.get_module_display }}</h2>
+        <p class="text-sm text-zinc-500 mt-1 font-mono">{{ analiz.target }} · {{ analiz.created_at|date:"d.m.Y H:i" }}</p>
+    </div>
+
+    {% if messages %}
+    <div class="space-y-2">
+        {% for message in messages %}
+        <p class="text-sm rounded border px-3 py-2 {% if message.tags == 'error' %}border-red-900 text-red-300 bg-red-950/40{% else %}border-emerald-900 text-emerald-300 bg-emerald-950/30{% endif %}">{{ message }}</p>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if analiz.analyst_note %}
+    <section class="bg-zinc-950 border border-zinc-800 rounded-lg p-5">
+        <h3 class="text-sm text-zinc-400 mb-2">Genel analist notu</h3>
+        <p class="text-sm text-zinc-200 whitespace-pre-wrap">{{ analiz.analyst_note }}</p>
+    </section>
+    {% endif %}
+
+    <div class="flex flex-wrap gap-2">
+        <a href="{% url 'analiz_json' analiz.pk %}" class="inline-flex items-center gap-1 border border-zinc-700 rounded px-4 py-2 text-sm text-zinc-200 hover:bg-zinc-900">
+            <span class="material-symbols-outlined text-base">download</span>
+            JSON indir (tarama + maddeler)
+        </a>
+        <a href="{% url 'dashboard' %}" class="inline-flex items-center gap-1 border border-zinc-700 rounded px-4 py-2 text-sm text-zinc-400 hover:bg-zinc-900">
+            Dashboard
+        </a>
+    </div>
+
+    <section class="rounded-lg p-5 analiz-detail-panel">
+        <h3 class="font-display text-lg text-zinc-100 mb-1">Analiz maddelerim</h3>
+        <p class="text-xs text-zinc-500 mb-4">Senin eklediğin bulgular — key ve yorum.</p>
+
+        {% if items %}
+        <ul class="space-y-3 mb-6">
+            {% for item in items %}
+            <li class="analiz-detail-item rounded p-4">
+                <div class="flex items-start justify-between gap-3">
+                    <div class="min-w-0 flex-1">
+                        <p class="text-xs font-mono text-amber-400/90 uppercase tracking-wide">{{ item.key }}</p>
+                        <p class="text-sm text-zinc-200 mt-1 whitespace-pre-wrap">{{ item.value }}</p>
+                    </div>
+                    <form action="{% url 'analiz_item_sil' analiz.pk item.pk %}" method="post" class="shrink-0">
+                        {% csrf_token %}
+                        <button type="submit" class="text-red-400/80 hover:text-red-300 p-1" title="Sil">
+                            <span class="material-symbols-outlined text-base">delete</span>
+                        </button>
+                    </form>
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p class="text-sm text-zinc-600 mb-6">Henüz madde yok.</p>
+        {% endif %}
+
+        <h4 class="text-sm text-zinc-400 mb-2">Yeni madde ekle</h4>
+        <form action="{% url 'analiz_item_ekle' analiz.pk %}" method="post" class="grid grid-cols-1 md:grid-cols-[8rem_1fr_auto] gap-2">
+            {% csrf_token %}
+            <input type="text" name="key" required maxlength="512" placeholder="key (ör. domain)"
+                class="rounded border border-zinc-700 bg-black px-3 py-2 text-sm text-zinc-200 font-mono focus:border-amber-600/40 focus:outline-none">
+            <textarea name="value" required rows="2" placeholder="Bulgu / notun…"
+                class="rounded border border-zinc-700 bg-black px-3 py-2 text-sm text-zinc-200 focus:border-amber-600/40 focus:outline-none"></textarea>
+            <button type="submit" class="analiz-detail-add-btn self-start inline-flex items-center gap-1 rounded px-4 py-2 text-sm">
+                <span class="material-symbols-outlined text-base">add</span>
+                Ekle
+            </button>
+        </form>
+    </section>
+
+    <section class="bg-zinc-950 border border-zinc-800 rounded-lg p-5">
+        <h3 class="text-sm text-zinc-500 mb-2">Ham tarama verisi</h3>
+        <p class="text-xs text-zinc-600">Tam JSON rapor indirme linkinde; burada yalnızca senin maddelerin listelenir.</p>
+    </section>
+</div>
+{% endblock %}

@@ -1,0 +1,280 @@
+/* CYBER OPS — unified UI layer */
+
+/* ── Content area backdrop ── */
+.app-content {
+    position: relative;
+    background-color: var(--theme-bg);
+    background-image:
+        radial-gradient(ellipse 120% 80% at 100% -20%, var(--theme-glow) 0%, transparent 55%),
+        radial-gradient(ellipse 80% 50% at 0% 100%, rgba(52, 211, 153, 0.04) 0%, transparent 50%),
+        linear-gradient(var(--theme-border) 1px, transparent 1px),
+        linear-gradient(90deg, var(--theme-border) 1px, transparent 1px);
+    background-size: 100% 100%, 100% 100%, 48px 48px, 48px 48px;
+    background-position: 0 0, 0 0, -1px -1px, -1px -1px;
+}
+
+[data-theme="light"] .app-content {
+    background-image:
+        radial-gradient(ellipse 120% 80% at 100% -20%, var(--theme-glow) 0%, transparent 55%),
+        linear-gradient(rgba(0, 0, 0, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 0, 0, 0.03) 1px, transparent 1px);
+    background-size: 100% 100%, 40px 40px, 40px 40px;
+}
+
+/* ── Module page headers ── */
+[class*="page-"] > .mb-8:first-child {
+    padding-bottom: 1.25rem;
+    margin-bottom: 1.75rem !important;
+    border-bottom: 1px solid var(--theme-border);
+}
+
+[class*="page-"] > .mb-8:first-child h2 {
+    color: var(--theme-text) !important;
+    letter-spacing: 0.04em;
+}
+
+[class*="page-"] > .mb-8:first-child .material-symbols-outlined.text-emerald-400 {
+    filter: drop-shadow(0 0 8px var(--theme-glow-strong, var(--theme-glow)));
+}
+
+[class*="page-"] > .mb-8:first-child p.text-zinc-500,
+[class*="page-"] > .mb-8:first-child p.text-slate-400 {
+    color: var(--theme-text-muted) !important;
+}
+
+[class*="page-"] > .mb-8:first-child > p:first-child {
+    color: var(--theme-accent) !important;
+    opacity: 0.85;
+    font-weight: 500;
+}
+
+/* ── Cards ── */
+.app-content section {
+    border-radius: var(--theme-radius-lg) !important;
+    box-shadow: var(--theme-card-shadow);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.app-content section:hover {
+    border-color: var(--theme-border-strong) !important;
+}
+
+.app-content section h3,
+.app-content section h4 {
+    color: var(--theme-text) !important;
+}
+
+/* ── Dashboard stat cards ── */
+.page-dashboard .grid > div.bg-zinc-950,
+.page-dashboard .mt-8.bg-zinc-950 {
+    border-radius: var(--theme-radius-lg) !important;
+    box-shadow: var(--theme-card-shadow);
+    transition: transform 0.15s ease, border-color 0.15s ease;
+}
+
+.page-dashboard .grid > div.bg-zinc-950:hover {
+    border-color: var(--theme-border-strong) !important;
+    transform: translateY(-1px);
+}
+
+.page-dashboard .text-4xl.font-display {
+    color: var(--theme-text) !important;
+    text-shadow: 0 0 24px var(--theme-glow);
+}
+
+/* ── Forms ── */
+.app-content input:not([type="checkbox"]):not([type="file"]),
+.app-content select,
+.app-content textarea {
+    border-radius: var(--theme-radius) !important;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.app-content input:focus,
+.app-content select:focus,
+.app-content textarea:focus {
+    border-color: var(--theme-accent) !important;
+    box-shadow: 0 0 0 2px var(--theme-glow) !important;
+    outline: none !important;
+}
+
+.app-content button[type="submit"].bg-zinc-100,
+.app-content form button.bg-zinc-100 {
+    background: var(--theme-accent) !important;
+    color: #042f1a !important;
+    border: 1px solid transparent !important;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    border-radius: var(--theme-radius) !important;
+    box-shadow: 0 0 16px var(--theme-glow);
+    transition: filter 0.15s ease, transform 0.1s ease, box-shadow 0.15s ease;
+}
+
+.app-content button[type="submit"].bg-zinc-100:hover,
+.app-content form button.bg-zinc-100:hover {
+    filter: brightness(1.08);
+    transform: translateY(-1px);
+    box-shadow: 0 0 22px var(--theme-glow-strong, var(--theme-glow));
+}
+
+[data-theme="light"] .app-content button[type="submit"].bg-zinc-100,
+[data-theme="light"] .app-content form button.bg-zinc-100 {
+    color: #fff !important;
+}
+
+.app-content a.border.border-zinc-700 {
+    border-radius: var(--theme-radius) !important;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.app-content a.border.border-zinc-700:hover {
+    border-color: var(--theme-accent) !important;
+    color: var(--theme-accent) !important;
+}
+
+/* ── Tables ── */
+.app-content table thead th {
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    color: var(--theme-text-muted) !important;
+    background: var(--theme-surface-hover) !important;
+}
+
+.app-content table tbody tr {
+    transition: background 0.12s ease;
+}
+
+.app-content table tbody tr:hover {
+    background: var(--theme-surface-hover) !important;
+}
+
+.app-content table td,
+.app-content table th {
+    padding: 0.55rem 0.75rem;
+}
+
+/* ── Flash messages ── */
+.app-content .mb-6.space-y-2 > div {
+    border-radius: var(--theme-radius) !important;
+    backdrop-filter: blur(8px);
+}
+
+/* ── Scrollbars ── */
+.app-content::-webkit-scrollbar,
+.analiz-dock__body::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+.app-content::-webkit-scrollbar-thumb,
+.analiz-dock__body::-webkit-scrollbar-thumb {
+    background: var(--theme-border-strong);
+    border-radius: 3px;
+}
+
+/* ── Sidebar ── */
+#app-sidebar {
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.15);
+}
+
+.app-sidebar__brand {
+    position: relative;
+    padding-bottom: 0.5rem;
+}
+
+.app-sidebar__brand::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -0.65rem;
+    height: 1px;
+    background: linear-gradient(90deg, var(--theme-sidebar-accent), transparent);
+    opacity: 0.45;
+}
+
+.sidebar-link {
+    position: relative;
+    border-radius: var(--theme-radius) !important;
+    transition: background 0.15s, border-color 0.15s, color 0.15s !important;
+}
+
+.sidebar-link:hover {
+    background: var(--theme-surface-hover) !important;
+}
+
+.sidebar-link.nav-active {
+    border-left: 2px solid var(--theme-sidebar-accent) !important;
+    padding-left: calc(0.75rem - 2px) !important;
+    background: var(--theme-surface) !important;
+    box-shadow: inset 0 0 20px var(--theme-glow);
+}
+
+.sidebar-link.nav-active .material-symbols-outlined {
+    color: var(--theme-accent) !important;
+}
+
+.app-sidebar__footer .inline-block.w-2 {
+    box-shadow: 0 0 8px var(--theme-accent);
+    animation: ui-pulse-dot 2s ease-in-out infinite;
+}
+
+@keyframes ui-pulse-dot {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.45; }
+}
+
+/* ── Topbar ── */
+#app-topbar {
+    position: sticky;
+    box-shadow: 0 1px 0 var(--theme-border), 0 4px 20px rgba(0, 0, 0, 0.12);
+}
+
+#app-topbar::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--theme-accent), transparent);
+    opacity: 0.35;
+    pointer-events: none;
+}
+
+#theme-toggle,
+.app-topbar__dash-link {
+    border-radius: var(--theme-radius) !important;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+#theme-toggle:hover,
+.app-topbar__dash-link:hover {
+    background: var(--theme-surface-hover) !important;
+}
+
+.topbar-pending-badge {
+    box-shadow: 0 0 12px rgba(245, 158, 11, 0.2);
+}
+
+/* ── Code blocks ── */
+.app-content pre {
+    padding: 0.75rem 1rem;
+    border-radius: var(--theme-radius);
+    background: var(--theme-surface-hover) !important;
+    border: 1px solid var(--theme-border) !important;
+}
+
+.phase-badge {
+    padding: 0.2rem 0.5rem;
+    border-radius: 0.25rem;
+    border: 1px solid var(--theme-border-strong);
+    background: var(--theme-surface);
+    color: var(--theme-accent) !important;
+    font-weight: 600;
+}
+
+::selection {
+    background: rgba(52, 211, 153, 0.35);
+    color: var(--theme-text);
+}

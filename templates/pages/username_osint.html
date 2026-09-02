@@ -1,0 +1,333 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Username OSINT | CYBER OPS{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/pages/username_osint.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="page-username-osint">
+    <div class="mb-8">
+        <p class="text-[10px] tracking-[0.3em] text-zinc-500 uppercase">Modül 06</p>
+        <h2 class="font-display text-3xl font-bold tracking-wide flex items-center gap-2 mt-1">
+            <span class="material-symbols-outlined text-emerald-400">person_search</span>
+            Username OSINT
+        </h2>
+        <p class="text-zinc-500 text-sm mt-2">Sherlock · Maigret · GitHub · sosyal profil keşfi</p>
+    </div>
+
+    <div class="space-y-6">
+        <section class="bg-zinc-950 border border-zinc-800 rounded-lg p-5 max-w-3xl">
+            <h3 class="font-display text-lg text-zinc-100 flex items-center gap-2">
+                <span class="material-symbols-outlined text-zinc-500">badge</span>
+                Hedef kullanıcı adı
+            </h3>
+            <p class="text-xs text-zinc-500 mt-1 mb-4">Örnek: kerem123 · Yalnızca yetkili hedefler.</p>
+            <form action="{% url 'username_osint' %}" method="post" data-scan-queue class="space-y-3 scan-queue-form">
+                {% csrf_token %}
+                <div class="flex flex-wrap gap-2">
+                    <input type="text" name="username" value="{{ username|default:'' }}" placeholder="kerem123" required
+                        pattern="[a-zA-Z0-9._-]{3,32}"
+                        class="flex-1 min-w-[12rem] rounded-md border border-zinc-800 bg-black px-3 py-2 text-sm text-zinc-100 placeholder-zinc-600 focus:border-zinc-500 focus:outline-none font-mono">
+                    <select name="scan_mode"
+                        class="rounded-md border border-zinc-800 bg-black px-3 py-2 text-sm text-zinc-200 focus:border-zinc-500 focus:outline-none">
+                        <option value="quick" {% if scan_mode == 'quick' %}selected{% endif %}>Hızlı (~2 dk)</option>
+                        <option value="standard" {% if scan_mode == 'standard' or not scan_mode %}selected{% endif %}>Standart (~3–5 dk)</option>
+                        <option value="deep" {% if scan_mode == 'deep' %}selected{% endif %}>Derin (~10–20 dk)</option>
+                    </select>
+                    <button type="submit" class="inline-flex items-center gap-1 shrink-0 rounded-md bg-zinc-100 px-4 py-2 text-sm text-zinc-900 hover:bg-white">
+                        <span class="material-symbols-outlined text-base">travel_explore</span>
+                        Tara
+                    </button>
+                </div>
+                <label class="inline-flex items-center gap-2 text-xs text-zinc-500 cursor-pointer">
+                    <input type="checkbox" name="generate_variants" {% if generate_variants %}checked{% endif %} class="rounded border-zinc-600 bg-zinc-900">
+                    Varyantları da tara (Sherlock — kerem, kerem_123 vb., max 5)
+                </label>
+                <p class="text-[10px] text-zinc-600">
+                    Hızlı: Sherlock · Standart: + Maigret top 500 + GitHub · Derin: + Maigret tüm DB
+                </p>
+            </form>
+        </section>
+
+        {% if error %}
+        <div class="rounded-lg border border-red-900 bg-red-950/50 p-5 text-sm text-red-200 flex gap-2 max-w-2xl">
+            <span class="material-symbols-outlined text-red-400 shrink-0">error</span>
+            <p>{{ error }}</p>
+        </div>
+        {% endif %}
+
+        {% if result and not result.error %}
+
+        {% include 'partials/analiz_kaydet.html' %}
+
+        <section class="bg-zinc-950 border border-zinc-800 rounded-lg p-5">
+            <div class="flex flex-wrap items-start justify-between gap-4">
+                <div>
+                    <p class="text-xs text-zinc-500">Hedef</p>
+                    <p class="font-display text-2xl text-zinc-100 font-mono">{{ result.username }}</p>
+                    <p class="text-xs text-zinc-500 mt-1">{{ result.scan_mode_label }} · {{ result.elapsed_seconds }} sn</p>
+                </div>
+                <div class="text-right">
+                    <p class="text-xs text-zinc-500">Exposure skoru</p>
+                    <p class="text-3xl font-display font-bold text-zinc-100">{{ result.risk.score }}<span class="text-lg text-zinc-500">/100</span></p>
+                    <p class="text-xs text-amber-400/90">{{ result.risk.level_label }}</p>
+                </div>
+            </div>
+            <div class="flex flex-wrap gap-2 mt-4">
+                {% for engine in result.engines %}
+                <span class="text-[10px] uppercase tracking-wider border border-zinc-700 rounded px-2 py-0.5 text-zinc-400">{{ engine }}</span>
+                {% endfor %}
+            </div>
+        </section>
+
+        {# Aşama 1: Profil analizi #}
+        <div>
+            <p class="phase-badge text-[10px] tracking-[0.2em] uppercase text-zinc-500 mb-2">Aşama 1</p>
+            <h3 class="font-display text-lg text-zinc-100 mb-3">Kullanıcı adı analizi</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <section class="bg-zinc-950 border border-zinc-800 rounded-lg p-4 text-sm">
+                    <dl class="space-y-2">
+                        <div class="grid grid-cols-[6rem_1fr] gap-2"><dt class="text-zinc-500">Uzunluk</dt><dd>{{ result.validation.length }}</dd></div>
+                        <div class="grid grid-cols-[6rem_1fr] gap-2"><dt class="text-zinc-500">Rakam</dt><dd>{% if result.validation.has_digit %}Var{% else %}Yok{% endif %}</dd></div>
+                        <div class="grid grid-cols-[6rem_1fr] gap-2"><dt class="text-zinc-500">Ayırıcı</dt><dd>{% if result.validation.has_underscore or result.validation.has_dot or result.validation.has_hyphen %}Var{% else %}Yok{% endif %}</dd></div>
+                    </dl>
+                </section>
+                {% if result.validation.hints %}
+                <section class="bg-zinc-950 border border-zinc-800 rounded-lg p-4 text-sm md:col-span-2">
+                    <p class="text-zinc-500 text-xs mb-1">Notlar</p>
+                    <p class="text-zinc-300">{{ result.validation.hints|join:" · " }}</p>
+                </section>
+                {% endif %}
+                {% if result.validation.variants %}
+                <section class="bg-zinc-950 border border-zinc-800 rounded-lg p-4 text-sm md:col-span-3">
+                    <p class="text-zinc-500 text-xs mb-1">Taranan varyantlar</p>
+                    <p class="font-mono text-zinc-300">{{ result.validation.variants|join:", " }}</p>
+                </section>
+                {% endif %}
+            </div>
+        </div>
+
+        {# GitHub #}
+        {% if result.github and result.scan_mode != 'quick' %}
+        <div>
+            <p class="phase-badge text-[10px] tracking-[0.2em] uppercase text-zinc-500 mb-2">Aşama 2</p>
+            <h3 class="font-display text-lg text-zinc-100 mb-3 flex items-center gap-2">
+                <span class="material-symbols-outlined text-zinc-400">code</span>
+                GitHub profili
+            </h3>
+            <section class="bg-zinc-950 border border-zinc-800 rounded-lg p-5">
+                {% if result.github.error %}
+                <p class="text-sm text-amber-300">{{ result.github.error }}</p>
+                {% elif result.github.exists %}
+                <div class="flex flex-wrap gap-6">
+                    {% if result.github.avatar_url %}
+                    <img src="{{ result.github.avatar_url }}" alt="" class="w-20 h-20 rounded-full border border-zinc-700">
+                    {% endif %}
+                    <div class="flex-1 min-w-[14rem] text-sm space-y-2">
+                        <p class="text-lg text-zinc-100">{{ result.github.name|default:result.github.username }}</p>
+                        <a href="{{ result.github.profile_url }}" target="_blank" rel="noopener" class="text-emerald-400 hover:underline font-mono text-xs">{{ result.github.profile_url }}</a>
+                        {% if result.github.bio %}<p class="text-zinc-400">{{ result.github.bio }}</p>{% endif %}
+                        <div class="flex flex-wrap gap-4 text-xs text-zinc-500">
+                            {% if result.github.location %}<span>{{ result.github.location }}</span>{% endif %}
+                            {% if result.github.company %}<span>{{ result.github.company }}</span>{% endif %}
+                            <span>{{ result.github.public_repos }} repo</span>
+                            <span>{{ result.github.followers }} follower</span>
+                        </div>
+                        {% if result.github.public_email %}
+                        <p class="text-amber-400 text-xs">Public email: {{ result.github.public_email }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+                {% else %}
+                <p class="text-sm text-zinc-600">{{ result.github.message|default:"GitHub profili yok." }}</p>
+                {% endif %}
+            </section>
+        </div>
+        {% endif %}
+
+        {# Platform taraması #}
+        <div>
+            <p class="phase-badge text-[10px] tracking-[0.2em] uppercase text-zinc-500 mb-2">Aşama {% if result.scan_mode == 'quick' %}2{% else %}3{% endif %}</p>
+            <h3 class="font-display text-lg text-zinc-100 mb-3">Platform taraması</h3>
+
+            <section class="bg-zinc-950 border border-zinc-800 rounded-lg p-5 mb-4">
+                <h4 class="text-sm text-zinc-300 mb-3">Sonuçlar nasıl okunur?</h4>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs text-zinc-400">
+                    <div class="flex gap-2 p-3 rounded border border-zinc-800 bg-zinc-900/40">
+                        <span class="legend-dot bg-emerald-400 mt-1"></span>
+                        <div><p class="text-emerald-400 font-medium">Hesap var</p><p>Tüm sitelere istek gitti — profil kayıtlı.</p></div>
+                    </div>
+                    <div class="flex gap-2 p-3 rounded border border-zinc-800 bg-zinc-900/40">
+                        <span class="legend-dot bg-zinc-500 mt-1"></span>
+                        <div><p class="text-zinc-300 font-medium">Hesap yok</p><p>İstek gitti — kullanıcı adı kayıtlı değil.</p></div>
+                    </div>
+                    <div class="flex gap-2 p-3 rounded border border-zinc-800 bg-zinc-900/40">
+                        <span class="legend-dot bg-amber-500 mt-1"></span>
+                        <div><p class="text-amber-300 font-medium">Belirsiz</p><p>İstek gitti — cevap alınamadı (WAF, rate limit, hata).</p></div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="bg-zinc-950 border border-zinc-800 rounded-lg p-5">
+                <div class="flex flex-wrap gap-6 mb-4 text-sm">
+                    <div>
+                        <p class="text-xs text-zinc-500">Sorgulanan (motor toplamı)</p>
+                        <p class="text-2xl font-display text-zinc-100">{{ result.merged.summary.queried_count }}</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-zinc-500 flex items-center gap-1"><span class="legend-dot bg-emerald-400"></span> Bulunan</p>
+                        <p class="text-2xl font-display text-emerald-400">{{ result.merged.summary.found_count }}</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-zinc-500 flex items-center gap-1"><span class="legend-dot bg-zinc-500"></span> Yok</p>
+                        <p class="text-2xl font-display text-zinc-400">{{ result.merged.summary.not_found_count }}</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-zinc-500 flex items-center gap-1"><span class="legend-dot bg-amber-500"></span> Belirsiz</p>
+                        <p class="text-2xl font-display text-amber-400">{{ result.merged.summary.unclear_count }}</p>
+                    </div>
+                </div>
+
+                {% if result.merged.summary.queried_count %}
+                <div class="scan-bar mb-6">
+                    <span class="bg-emerald-500" style="width: {% widthratio result.merged.summary.found_count result.merged.summary.queried_count 100 %}%"></span>
+                    <span class="bg-zinc-600" style="width: {% widthratio result.merged.summary.not_found_count result.merged.summary.queried_count 100 %}%"></span>
+                    <span class="bg-amber-500" style="width: {% widthratio result.merged.summary.unclear_count result.merged.summary.queried_count 100 %}%"></span>
+                </div>
+                {% endif %}
+
+                <div class="flex flex-wrap gap-2 mb-3">
+                    <button type="button" class="account-tab is-active" data-account-tab="found">Bulunan ({{ result.merged.summary.found_count }})</button>
+                    <button type="button" class="account-tab" data-account-tab="not_found">Hesap yok ({{ result.merged.summary.not_found_count }})</button>
+                    <button type="button" class="account-tab" data-account-tab="unclear">Belirsiz ({{ result.merged.summary.unclear_count }})</button>
+                </div>
+
+                <div class="account-panel is-active" data-account-panel="found">
+                    {% if result.merged.found %}
+                    <div class="flex flex-wrap gap-2 mb-3">
+                        <button type="button" class="cat-filter is-active" data-cat-filter="all">Tümü</button>
+                        <button type="button" class="cat-filter" data-cat-filter="social">Social</button>
+                        <button type="button" class="cat-filter" data-cat-filter="coding">Coding</button>
+                        <button type="button" class="cat-filter" data-cat-filter="gaming">Gaming</button>
+                        <button type="button" class="cat-filter" data-cat-filter="forum">Forum</button>
+                        <button type="button" class="cat-filter" data-cat-filter="other">Diğer</button>
+                    </div>
+                    <div class="overflow-auto max-h-[32rem] border border-emerald-900/30 rounded">
+                        <table class="w-full text-sm text-left">
+                            <thead class="text-xs text-zinc-500 uppercase bg-zinc-900/80 sticky top-0">
+                                <tr>
+                                    <th class="px-3 py-2">Platform</th>
+                                    <th class="px-3 py-2">URL</th>
+                                    <th class="px-3 py-2">Kaynak</th>
+                                    <th class="px-3 py-2">Kategori</th>
+                                    <th class="px-3 py-2">Güven</th>
+                                </tr>
+                            </thead>
+                            <tbody id="found-table-body">
+                                {% for item in result.merged.found %}
+                                <tr class="border-t border-zinc-800/80 hover:bg-emerald-950/20" data-category-row="{{ item.category }}">
+                                    <td class="px-3 py-2 text-emerald-400 font-medium">
+                                        {{ item.platform }}
+                                        {% if item.from_variant %}<span class="text-[10px] text-zinc-500 block">varyant</span>{% endif %}
+                                    </td>
+                                    <td class="px-3 py-2 text-xs break-all">
+                                        {% if item.url %}<a href="{{ item.url }}" target="_blank" rel="noopener" class="text-zinc-300 hover:text-white">{{ item.url }}</a>{% else %}—{% endif %}
+                                    </td>
+                                    <td class="px-3 py-2">
+                                        <span class="source-badge border border-zinc-700 text-zinc-400">{{ item.source_label }}</span>
+                                    </td>
+                                    <td class="px-3 py-2 text-zinc-500 text-xs uppercase">{{ item.category }}</td>
+                                    <td class="px-3 py-2 text-zinc-400 text-xs">{% if item.confidence %}{{ item.confidence }}%{% else %}—{% endif %}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-sm text-zinc-600 py-8 text-center border border-dashed border-zinc-800 rounded">Kayıtlı profil bulunamadı.</p>
+                    {% endif %}
+                </div>
+
+                <div class="account-panel" data-account-panel="not_found">
+                    {% if result.merged.not_found %}
+                    <div class="overflow-auto max-h-[28rem] border border-zinc-800 rounded">
+                        <table class="w-full text-sm">
+                            <thead class="text-xs text-zinc-500 uppercase bg-zinc-900/80 sticky top-0">
+                                <tr><th class="px-3 py-2">Platform</th><th class="px-3 py-2">Domain</th><th class="px-3 py-2">Kaynak</th></tr>
+                            </thead>
+                            <tbody>
+                                {% for item in result.merged.not_found %}
+                                <tr class="border-t border-zinc-800/80">
+                                    <td class="px-3 py-2 text-zinc-500">{{ item.platform }}</td>
+                                    <td class="px-3 py-2 text-zinc-600 text-xs">{{ item.domain }}</td>
+                                    <td class="px-3 py-2 text-xs text-zinc-600">{{ item.source }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-sm text-zinc-600 py-8 text-center border border-dashed border-zinc-800 rounded">“Hesap yok” sonucu yok.</p>
+                    {% endif %}
+                </div>
+
+                <div class="account-panel" data-account-panel="unclear">
+                    {% if result.merged.unclear %}
+                    <p class="text-xs text-amber-400/80 mb-2">Bu sitelere istek atıldı; net sonuç alınamadı.</p>
+                    <div class="overflow-auto max-h-[28rem] border border-amber-900/30 rounded">
+                        <table class="w-full text-sm">
+                            <thead class="text-xs text-zinc-500 uppercase bg-zinc-900/80 sticky top-0">
+                                <tr><th class="px-3 py-2">Platform</th><th class="px-3 py-2">Domain</th><th class="px-3 py-2">Kaynak</th></tr>
+                            </thead>
+                            <tbody>
+                                {% for item in result.merged.unclear %}
+                                <tr class="border-t border-zinc-800/80">
+                                    <td class="px-3 py-2 text-amber-300/80">{{ item.platform }}</td>
+                                    <td class="px-3 py-2 text-zinc-500 text-xs">{{ item.domain }}</td>
+                                    <td class="px-3 py-2 text-xs text-zinc-600">{{ item.source }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-sm text-zinc-600 py-8 text-center border border-dashed border-zinc-800 rounded">Belirsiz sonuç yok.</p>
+                    {% endif %}
+                </div>
+            </section>
+        </div>
+
+        {# Risk özeti #}
+        <section class="bg-zinc-950 border border-zinc-800 rounded-lg p-5">
+            <h3 class="font-display text-lg text-zinc-100 mb-4 flex items-center gap-2">
+                <span class="material-symbols-outlined text-zinc-500">gpp_maybe</span>
+                Exposure özeti
+            </h3>
+            <ul class="space-y-2 text-sm">
+                {% for f in result.risk.findings %}
+                <li class="flex gap-2">
+                    <span class="text-[10px] uppercase w-14 shrink-0
+                        {% if f.level == 'high' %}text-red-400{% elif f.level == 'medium' %}text-amber-400{% else %}text-zinc-500{% endif %}">{{ f.level }}</span>
+                    <span class="text-zinc-300">{{ f.text }}</span>
+                </li>
+                {% endfor %}
+            </ul>
+            {% if result.merged.by_category %}
+            <p class="text-xs text-zinc-500 mt-4">Kategori dağılımı:
+                {% for cat, count in result.merged.by_category.items %}
+                <span class="text-zinc-400">{{ cat }} ({{ count }}){% if not forloop.last %} · {% endif %}</span>
+                {% endfor %}
+            </p>
+            {% endif %}
+        </section>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/username_osint.js' %}"></script>
+{% endblock %}

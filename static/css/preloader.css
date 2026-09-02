@@ -1,0 +1,388 @@
+#preloader {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #020403;
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    transition: opacity 0.4s ease, visibility 0.4s ease;
+    overflow: hidden;
+}
+
+#preloader.is-hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+/* Arka plan katmanları */
+.preloader-matrix {
+    position: absolute;
+    inset: 0;
+    opacity: 0.07;
+    background:
+        repeating-linear-gradient(
+            0deg,
+            transparent,
+            transparent 2px,
+            rgba(0, 255, 136, 0.03) 2px,
+            rgba(0, 255, 136, 0.03) 4px
+        );
+    animation: preloader-matrix-drift 8s linear infinite;
+}
+
+.preloader-grid {
+    position: absolute;
+    inset: 0;
+    background-image:
+        linear-gradient(rgba(0, 255, 136, 0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 255, 136, 0.05) 1px, transparent 1px);
+    background-size: 24px 24px;
+    mask-image: radial-gradient(ellipse 80% 70% at 50% 50%, black 10%, transparent 70%);
+}
+
+.preloader-scan {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, #00ff88, #34d399, transparent);
+    animation: preloader-scan 2.2s ease-in-out infinite;
+    box-shadow: 0 0 20px #00ff88, 0 0 40px rgba(0, 255, 136, 0.3);
+    opacity: 0.85;
+}
+
+.preloader-noise {
+    position: absolute;
+    inset: 0;
+    opacity: 0.04;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    pointer-events: none;
+}
+
+/* Ana panel — terminal penceresi */
+.preloader-panel {
+    position: relative;
+    z-index: 10;
+    width: min(34rem, calc(100vw - 2rem));
+    padding: 0;
+    border: 1px solid rgba(0, 255, 136, 0.35);
+    border-radius: 6px;
+    background: rgba(0, 8, 4, 0.92);
+    box-shadow:
+        0 0 0 1px rgba(0, 255, 136, 0.08),
+        0 0 40px rgba(0, 255, 136, 0.12),
+        inset 0 0 60px rgba(0, 255, 136, 0.03);
+    overflow: hidden;
+}
+
+.preloader-panel::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0, 0, 0, 0.15) 2px,
+        rgba(0, 0, 0, 0.15) 4px
+    );
+    pointer-events: none;
+    z-index: 2;
+}
+
+/* Terminal başlık çubuğu */
+.preloader-header {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.55rem 0.85rem;
+    background: rgba(0, 255, 136, 0.06);
+    border-bottom: 1px solid rgba(0, 255, 136, 0.2);
+    font-size: 0.68rem;
+    color: #6ee7b7;
+}
+
+.preloader-dot {
+    width: 0.55rem;
+    height: 0.55rem;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.preloader-dot--red { background: #ef4444; box-shadow: 0 0 6px #ef4444; }
+.preloader-dot--amber { background: #f59e0b; box-shadow: 0 0 6px #f59e0b; }
+.preloader-dot--green { background: #22c55e; box-shadow: 0 0 6px #22c55e; }
+
+.preloader-header__title {
+    flex: 1;
+    color: #a7f3d0;
+    letter-spacing: 0.04em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.preloader-header__blink {
+    color: #00ff88;
+    animation: preloader-blink 1s step-end infinite;
+}
+
+/* Terminal log alanı */
+.preloader-terminal {
+    position: relative;
+    z-index: 1;
+    min-height: 7.5rem;
+    max-height: 9rem;
+    overflow: hidden;
+    padding: 0.75rem 0.85rem;
+    font-size: 0.68rem;
+    line-height: 1.55;
+    color: #34d399;
+    text-align: left;
+}
+
+.preloader-terminal__line {
+    opacity: 0;
+    transform: translateX(-4px);
+    animation: preloader-line-in 0.25s ease forwards;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.preloader-terminal__line--ok { color: #6ee7b7; }
+.preloader-terminal__line--warn { color: #fbbf24; }
+.preloader-terminal__line--sys { color: #71717a; }
+.preloader-terminal__line--cmd { color: #00ff88; }
+.preloader-terminal__line--err { color: #f87171; }
+
+.preloader-terminal__prompt {
+    color: #059669;
+    margin-right: 0.35rem;
+}
+
+.preloader-terminal__cursor {
+    display: inline-block;
+    width: 0.45rem;
+    height: 0.85rem;
+    background: #00ff88;
+    vertical-align: text-bottom;
+    animation: preloader-blink 0.8s step-end infinite;
+    margin-left: 2px;
+}
+
+/* Marka / glitch başlık */
+.preloader-brand {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+    padding: 1.25rem 1rem 0.75rem;
+    border-top: 1px solid rgba(0, 255, 136, 0.12);
+}
+
+.preloader-hex-ring {
+    width: 3.5rem;
+    height: 3.5rem;
+    margin: 0 auto 0.75rem;
+    border: 2px solid rgba(0, 255, 136, 0.4);
+    border-radius: 4px;
+    transform: rotate(45deg);
+    animation: preloader-pulse 2s ease-in-out infinite;
+    box-shadow: 0 0 16px rgba(0, 255, 136, 0.25);
+}
+
+.preloader-hex-ring::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 1.25rem;
+    height: 1.25rem;
+    margin: -0.625rem 0 0 -0.625rem;
+    border: 1px solid rgba(0, 255, 136, 0.6);
+    transform: rotate(-45deg);
+}
+
+.preloader-brand .preloader-hex-ring {
+    position: relative;
+}
+
+.preloader-glitch {
+    font-family: "Rajdhani", sans-serif;
+    font-size: 1.75rem;
+    font-weight: 700;
+    letter-spacing: 0.35em;
+    color: #ecfdf5;
+    text-shadow: 0 0 10px rgba(0, 255, 136, 0.8);
+    position: relative;
+    margin: 0;
+    animation: preloader-glitch-skew 4s infinite linear alternate-reverse;
+}
+
+.preloader-glitch::before,
+.preloader-glitch::after {
+    content: attr(data-text);
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    overflow: hidden;
+    clip-path: inset(0 0 0 0);
+}
+
+.preloader-glitch::before {
+    left: 2px;
+    text-shadow: -2px 0 #ff0080;
+    animation: preloader-glitch-1 3s infinite linear alternate-reverse;
+}
+
+.preloader-glitch::after {
+    left: -2px;
+    text-shadow: 2px 0 #00ff88;
+    animation: preloader-glitch-2 2.5s infinite linear alternate-reverse;
+}
+
+.preloader-tagline {
+    margin: 0.5rem 0 0;
+    font-size: 0.7rem;
+    letter-spacing: 0.12em;
+    color: #6ee7b7;
+    text-transform: uppercase;
+    min-height: 1.2em;
+    animation: preloader-tagline-pulse 1.5s ease-in-out infinite;
+}
+
+/* İlerleme çubuğu */
+.preloader-progress {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    padding: 0 1rem 1rem;
+}
+
+.preloader-progress__track {
+    flex: 1;
+    height: 4px;
+    background: rgba(0, 255, 136, 0.12);
+    border-radius: 2px;
+    overflow: hidden;
+    border: 1px solid rgba(0, 255, 136, 0.2);
+}
+
+.preloader-progress__bar {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #059669, #00ff88, #34d399);
+    box-shadow: 0 0 10px #00ff88;
+    transition: width 0.15s ease;
+    border-radius: 1px;
+}
+
+.preloader-progress__pct {
+    font-size: 0.65rem;
+    color: #00ff88;
+    min-width: 2.5rem;
+    text-align: right;
+    text-shadow: 0 0 8px rgba(0, 255, 136, 0.5);
+}
+
+/* Alt bilgi */
+.preloader-footer {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.35rem 0.5rem;
+    padding: 0.55rem 0.75rem;
+    background: rgba(0, 0, 0, 0.4);
+    border-top: 1px solid rgba(0, 255, 136, 0.1);
+    font-size: 0.58rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #52525b;
+}
+
+.preloader-footer__sep { color: #27272a; }
+.preloader-footer__warn { color: #f59e0b; }
+
+/* Animasyonlar */
+@keyframes preloader-scan {
+    0% { top: 5%; opacity: 0; }
+    10% { opacity: 0.85; }
+    90% { opacity: 0.85; }
+    100% { top: 95%; opacity: 0; }
+}
+
+@keyframes preloader-pulse {
+    0%, 100% { box-shadow: 0 0 8px rgba(0, 255, 136, 0.2); opacity: 0.8; }
+    50% { box-shadow: 0 0 24px rgba(0, 255, 136, 0.55); opacity: 1; }
+}
+
+@keyframes preloader-blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+}
+
+@keyframes preloader-line-in {
+    to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes preloader-matrix-drift {
+    to { background-position: 0 100px; }
+}
+
+@keyframes preloader-glitch-skew {
+    0% { transform: skew(0deg); }
+    20% { transform: skew(-0.5deg); }
+    40% { transform: skew(0.3deg); }
+    60% { transform: skew(-0.2deg); }
+    80% { transform: skew(0.4deg); }
+    100% { transform: skew(0deg); }
+}
+
+@keyframes preloader-glitch-1 {
+    0% { clip-path: inset(20% 0 60% 0); transform: translate(-2px); }
+    20% { clip-path: inset(60% 0 10% 0); transform: translate(2px); }
+    40% { clip-path: inset(40% 0 40% 0); transform: translate(-1px); }
+    60% { clip-path: inset(80% 0 5% 0); transform: translate(1px); }
+    80% { clip-path: inset(10% 0 70% 0); transform: translate(-2px); }
+    100% { clip-path: inset(30% 0 50% 0); transform: translate(0); }
+}
+
+@keyframes preloader-glitch-2 {
+    0% { clip-path: inset(10% 0 80% 0); transform: translate(2px); }
+    25% { clip-path: inset(50% 0 30% 0); transform: translate(-2px); }
+    50% { clip-path: inset(70% 0 15% 0); transform: translate(1px); }
+    75% { clip-path: inset(25% 0 60% 0); transform: translate(-1px); }
+    100% { clip-path: inset(5% 0 85% 0); transform: translate(0); }
+}
+
+@keyframes preloader-tagline-pulse {
+    0%, 100% { opacity: 0.75; }
+    50% { opacity: 1; text-shadow: 0 0 12px rgba(0, 255, 136, 0.4); }
+}
+
+/* Eski sınıflar — geriye dönük */
+.preloader-shield { display: none; }
+
+@media (max-width: 480px) {
+    .preloader-glitch {
+        font-size: 1.35rem;
+        letter-spacing: 0.2em;
+    }
+
+    .preloader-terminal {
+        min-height: 6rem;
+        font-size: 0.62rem;
+    }
+
+    .preloader-footer {
+        font-size: 0.52rem;
+    }
+}

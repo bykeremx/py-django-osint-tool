@@ -1,0 +1,257 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Network Intel | CYBER OPS{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/pages/network_intel.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="page-network-intel">
+    <div class="mb-8">
+        <p class="text-[10px] tracking-[0.3em] text-zinc-500 uppercase">Modül 03</p>
+        <h2 class="font-display text-3xl font-bold tracking-wide flex items-center gap-2 mt-1">
+            <span class="material-symbols-outlined text-emerald-400">lan</span>
+            Network intel
+        </h2>
+        <p class="text-zinc-500 text-sm mt-2">IP · ASN · TLS · DNS · exposure · tehdit özeti</p>
+    </div>
+
+    <div class="space-y-6">
+        <section class="bg-zinc-950 border border-zinc-800 rounded-lg p-5 max-w-2xl">
+            <h3 class="font-display text-lg text-zinc-100 flex items-center gap-2">
+                <span class="material-symbols-outlined text-zinc-500">my_location</span>
+                Hedef
+            </h3>
+            <p class="text-xs text-zinc-500 mt-1 mb-4">Yalnızca yetkin olduğun host / IP.</p>
+            <form action="{% url 'network_intel' %}" method="post" data-scan-queue class="flex gap-2 scan-queue-form">
+                {% csrf_token %}
+                <input type="text" name="domain" value="{{ domain|default:'' }}" placeholder="ornek.com veya 1.2.3.4" required
+                    class="flex-1 rounded-md border border-zinc-800 bg-black px-3 py-2 text-sm text-zinc-100 placeholder-zinc-600 focus:border-zinc-500 focus:outline-none">
+                <button type="submit" class="inline-flex items-center gap-1 shrink-0 rounded-md bg-zinc-100 px-4 py-2 text-sm text-zinc-900 hover:bg-white">
+                    <span class="material-symbols-outlined text-base">search</span>
+                    Sorgula
+                </button>
+            </form>
+        </section>
+
+        {% if error %}
+        <div class="rounded-lg border border-red-900 bg-red-950/50 p-5 text-sm text-red-200 flex gap-2 max-w-2xl">
+            <span class="material-symbols-outlined text-red-400 shrink-0">error</span>
+            <p>{{ error }}</p>
+        </div>
+        {% endif %}
+
+        {% if intel %}
+        {% include 'partials/analiz_kaydet.html' %}
+        {% if intel.error %}<p class="text-sm text-amber-300">{{ intel.error }}</p>{% endif %}
+
+        {% if intel.threat %}
+        <section class="bg-zinc-950 border border-zinc-800 rounded-lg p-5">
+            <h3 class="font-display text-lg text-zinc-100 flex items-center gap-2 mb-4">
+                <span class="material-symbols-outlined text-zinc-500">gpp_maybe</span>
+                Tehdit özeti
+            </h3>
+            <div class="flex flex-wrap items-center gap-4 mb-4">
+                <div>
+                    <p class="text-xs text-zinc-500">Risk skoru</p>
+                    <p class="text-3xl font-display font-bold text-zinc-100">{{ intel.threat.score }}<span class="text-lg text-zinc-500">/100</span></p>
+                </div>
+                <div>
+                    <p class="text-xs text-zinc-500">Seviye</p>
+                    <p class="text-sm uppercase tracking-widest text-zinc-300">{{ intel.threat.level }}</p>
+                </div>
+            </div>
+            <ul class="space-y-2 text-sm">
+                {% for item in intel.threat.findings %}
+                <li class="flex gap-2">
+                    <span class="text-xs uppercase w-14 shrink-0
+                        {% if item.level == 'high' %}text-red-400{% elif item.level == 'medium' %}text-amber-400{% elif item.level == 'low' %}text-yellow-600{% else %}text-zinc-500{% endif %}">
+                        {{ item.level }}
+                    </span>
+                    <span class="text-zinc-300">{{ item.text }}</span>
+                </li>
+                {% endfor %}
+            </ul>
+        </section>
+        {% endif %}
+
+        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+            <section class="bg-zinc-950 border border-zinc-800 rounded-lg p-5">
+                <p class="text-xs text-zinc-500 mb-1">Hedef</p>
+                <p class="text-sm text-zinc-100 break-all">{{ intel.domain }}</p>
+                <p class="text-xs text-zinc-600 mt-1">{{ intel.input_type }}</p>
+            </section>
+            <section class="bg-zinc-950 border border-zinc-800 rounded-lg p-5">
+                <p class="text-xs text-zinc-500 mb-1">IPv4</p>
+                <p class="text-sm text-zinc-100 break-all">{{ intel.ipv4|default:"—" }}</p>
+                {% if intel.all_ipv4|length > 1 %}
+                <p class="text-xs text-zinc-600 mt-1">+{{ intel.all_ipv4|length|add:"-1" }} A kaydı</p>
+                {% endif %}
+            </section>
+            <section class="bg-zinc-950 border border-zinc-800 rounded-lg p-5">
+                <p class="text-xs text-zinc-500 mb-1">IPv6</p>
+                <p class="text-sm text-zinc-100 break-all">{{ intel.ipv6|default:"—" }}</p>
+            </section>
+            <section class="bg-zinc-950 border border-zinc-800 rounded-lg p-5">
+                <p class="text-xs text-zinc-500 mb-1">PTR</p>
+                <p class="text-sm text-zinc-100 break-all">{{ intel.ptr|default:"—" }}</p>
+            </section>
+        </div>
+
+        <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
+            <section class="bg-zinc-950 border border-zinc-800 rounded-lg p-5">
+                <h3 class="font-display text-lg text-zinc-100 flex items-center gap-2 mb-4">
+                    <span class="material-symbols-outlined text-zinc-500">public</span>
+                    Geo / ISP
+                </h3>
+                <dl class="space-y-2 text-sm">
+                    <div class="grid grid-cols-[7rem_1fr] gap-2"><dt class="text-zinc-500">Ülke</dt><dd>{{ intel.geo.country }}{% if intel.geo.country_code %} ({{ intel.geo.country_code }}){% endif %}</dd></div>
+                    <div class="grid grid-cols-[7rem_1fr] gap-2"><dt class="text-zinc-500">Şehir</dt><dd>{{ intel.geo.city }}, {{ intel.geo.region }}</dd></div>
+                    <div class="grid grid-cols-[7rem_1fr] gap-2"><dt class="text-zinc-500">Koordinat</dt><dd>{% if intel.geo.lat %}{{ intel.geo.lat }}, {{ intel.geo.lon }}{% else %}—{% endif %}</dd></div>
+                    <div class="grid grid-cols-[7rem_1fr] gap-2"><dt class="text-zinc-500">ISP</dt><dd class="break-all">{{ intel.geo.isp }}</dd></div>
+                    <div class="grid grid-cols-[7rem_1fr] gap-2"><dt class="text-zinc-500">Org</dt><dd class="break-all">{{ intel.geo.org }}</dd></div>
+                    <div class="grid grid-cols-[7rem_1fr] gap-2"><dt class="text-zinc-500">ASN</dt><dd class="break-all">{{ intel.geo.asn }}</dd></div>
+                    <div class="grid grid-cols-[7rem_1fr] gap-2"><dt class="text-zinc-500">Hosting</dt><dd>{% if intel.geo.hosting %}Evet{% else %}Hayır{% endif %}</dd></div>
+                    <div class="grid grid-cols-[7rem_1fr] gap-2"><dt class="text-zinc-500">Proxy/CDN</dt><dd>{% if intel.geo.proxy %}Evet{% else %}Hayır{% endif %}</dd></div>
+                </dl>
+            </section>
+
+            <section class="bg-zinc-950 border border-zinc-800 rounded-lg p-5">
+                <h3 class="font-display text-lg text-zinc-100 flex items-center gap-2 mb-4">
+                    <span class="material-symbols-outlined text-zinc-500">cloud</span>
+                    Altyapı
+                </h3>
+                <dl class="space-y-2 text-sm">
+                    <div class="grid grid-cols-[7rem_1fr] gap-2"><dt class="text-zinc-500">Sağlayıcı</dt><dd>{{ intel.infrastructure.provider }}</dd></div>
+                    <div class="grid grid-cols-[7rem_1fr] gap-2"><dt class="text-zinc-500">Hosting</dt><dd>{% if intel.infrastructure.hosting %}Evet{% else %}Hayır{% endif %}</dd></div>
+                    <div class="grid grid-cols-[7rem_1fr] gap-2"><dt class="text-zinc-500">CDN/Proxy</dt><dd>{% if intel.infrastructure.proxy_or_cdn %}Evet{% else %}Hayır{% endif %}</dd></div>
+                    {% if intel.infrastructure.tags %}
+                    <div class="grid grid-cols-[7rem_1fr] gap-2"><dt class="text-zinc-500">Etiket</dt><dd>{{ intel.infrastructure.tags|join:", " }}</dd></div>
+                    {% endif %}
+                </dl>
+                <p class="text-xs text-zinc-500 mt-4 mb-2">RDAP</p>
+                <dl class="space-y-2 text-sm">
+                    <div class="grid grid-cols-[7rem_1fr] gap-2"><dt class="text-zinc-500">Ağ</dt><dd class="break-all">{{ intel.rdap.network_name }}</dd></div>
+                    <div class="grid grid-cols-[7rem_1fr] gap-2"><dt class="text-zinc-500">CIDR</dt><dd class="break-all">{{ intel.rdap.network_cidr }}</dd></div>
+                    <div class="grid grid-cols-[7rem_1fr] gap-2"><dt class="text-zinc-500">ASN</dt><dd class="break-all">{{ intel.rdap.asn_description }}</dd></div>
+                </dl>
+            </section>
+
+            {% if intel.dns_intel.a or intel.dns_intel.mx %}
+            <section class="bg-zinc-950 border border-zinc-800 rounded-lg p-5">
+                <h3 class="font-display text-lg text-zinc-100 flex items-center gap-2 mb-4">
+                    <span class="material-symbols-outlined text-zinc-500">dns</span>
+                    DNS istihbaratı
+                </h3>
+                <dl class="space-y-3 text-sm">
+                    {% if intel.dns_intel.a %}
+                    <div><dt class="text-zinc-500 text-xs mb-1">A</dt><dd class="text-zinc-300">{{ intel.dns_intel.a|join:", " }}</dd></div>
+                    {% endif %}
+                    {% if intel.dns_intel.aaaa %}
+                    <div><dt class="text-zinc-500 text-xs mb-1">AAAA</dt><dd class="text-zinc-300 break-all">{{ intel.dns_intel.aaaa|join:", " }}</dd></div>
+                    {% endif %}
+                    {% if intel.dns_intel.mx %}
+                    <div><dt class="text-zinc-500 text-xs mb-1">MX</dt><dd class="text-zinc-300">{{ intel.dns_intel.mx|join:" · " }}</dd></div>
+                    {% endif %}
+                    {% if intel.dns_intel.ns %}
+                    <div><dt class="text-zinc-500 text-xs mb-1">NS</dt><dd class="text-zinc-300">{{ intel.dns_intel.ns|join:", " }}</dd></div>
+                    {% endif %}
+                    {% if intel.dns_intel.spf %}
+                    <div><dt class="text-zinc-500 text-xs mb-1">SPF</dt><dd class="text-zinc-400 break-all text-xs">{{ intel.dns_intel.spf }}</dd></div>
+                    {% endif %}
+                    {% if intel.dns_intel.dmarc %}
+                    <div><dt class="text-zinc-500 text-xs mb-1">DMARC</dt><dd class="text-zinc-400 break-all text-xs">{{ intel.dns_intel.dmarc }}</dd></div>
+                    {% endif %}
+                </dl>
+            </section>
+            {% endif %}
+
+            <section class="bg-zinc-950 border border-zinc-800 rounded-lg p-5">
+                <h3 class="font-display text-lg text-zinc-100 flex items-center gap-2 mb-4">
+                    <span class="material-symbols-outlined text-zinc-500">lock</span>
+                    TLS / Sertifika
+                </h3>
+                {% if intel.tls.error %}
+                <p class="text-sm text-amber-300">{{ intel.tls.error }}</p>
+                {% else %}
+                <dl class="space-y-2 text-sm">
+                    <div class="grid grid-cols-[7rem_1fr] gap-2"><dt class="text-zinc-500">Protokol</dt><dd>{{ intel.tls.protocol|default:"—" }}</dd></div>
+                    <div class="grid grid-cols-[7rem_1fr] gap-2"><dt class="text-zinc-500">Issuer</dt><dd class="break-all text-xs">{{ intel.tls.issuer|default:"—" }}</dd></div>
+                    <div class="grid grid-cols-[7rem_1fr] gap-2"><dt class="text-zinc-500">Bitiş</dt><dd>{% if intel.tls.expired %}<span class="text-red-400">Süresi dolmuş</span>{% else %}{{ intel.tls.not_after }}{% if intel.tls.days_left is not None %} ({{ intel.tls.days_left }} gün){% endif %}{% endif %}</dd></div>
+                    {% if intel.tls.san %}
+                    <div><dt class="text-zinc-500 text-xs mb-1">SAN</dt><dd class="text-zinc-400 text-xs break-all">{{ intel.tls.san|join:", " }}</dd></div>
+                    {% endif %}
+                </dl>
+                {% endif %}
+            </section>
+
+            <section class="bg-zinc-950 border border-zinc-800 rounded-lg p-5">
+                <h3 class="font-display text-lg text-zinc-100 flex items-center gap-2 mb-4">
+                    <span class="material-symbols-outlined text-zinc-500">shield</span>
+                    Güvenlik başlıkları
+                </h3>
+                {% if intel.security_headers.error %}
+                <p class="text-sm text-amber-300">{{ intel.security_headers.error }}</p>
+                {% else %}
+                <p class="text-xs text-zinc-500 mb-3">HTTP {{ intel.security_headers.status_code|default:"—" }} · {{ intel.security_headers.url }}</p>
+                {% if intel.security_headers.present %}
+                <p class="text-xs text-zinc-500 mb-1">Mevcut</p>
+                <p class="text-sm text-emerald-400/90 mb-3">{{ intel.security_headers.present|join:", " }}</p>
+                {% endif %}
+                {% if intel.security_headers.missing %}
+                <p class="text-xs text-zinc-500 mb-1">Eksik</p>
+                <p class="text-sm text-amber-400/90">{{ intel.security_headers.missing|join:", " }}</p>
+                {% endif %}
+                {% endif %}
+            </section>
+
+            <section class="bg-zinc-950 border border-zinc-800 rounded-lg p-5">
+                <h3 class="font-display text-lg text-zinc-100 flex items-center gap-2 mb-4">
+                    <span class="material-symbols-outlined text-zinc-500">report</span>
+                    İtibar (DNSBL)
+                </h3>
+                {% if intel.reputation.error %}
+                <p class="text-sm text-amber-300">{{ intel.reputation.error }}</p>
+                {% elif intel.reputation.clean %}
+                <p class="text-sm text-emerald-400">Spamhaus zen: temiz</p>
+                {% else %}
+                <p class="text-sm text-red-400">Listede: {{ intel.reputation.listed|join:", " }}</p>
+                {% endif %}
+            </section>
+
+            <section class="bg-zinc-950 border border-zinc-800 rounded-lg p-5 xl:col-span-2">
+                <h3 class="font-display text-lg text-zinc-100 flex items-center gap-2 mb-1">
+                    <span class="material-symbols-outlined text-zinc-500">radar</span>
+                    InternetDB (exposure)
+                </h3>
+                <p class="text-xs text-zinc-500 mb-4">Pasif kayıt; aktif tarama değildir.</p>
+                {% if intel.exposure.error %}<p class="text-sm text-amber-300 mb-3">{{ intel.exposure.error }}</p>{% endif %}
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                    <div>
+                        <p class="text-xs text-zinc-500 mb-1">Portlar</p>
+                        <p class="text-zinc-200">{% if intel.exposure.ports %}{{ intel.exposure.ports|join:", " }}{% else %}—{% endif %}</p>
+                        {% if intel.exposure.high_risk_ports %}
+                        <p class="text-xs text-red-400 mt-1">Yüksek risk: {{ intel.exposure.high_risk_ports|join:", " }}</p>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <p class="text-xs text-zinc-500 mb-1">Hostname</p>
+                        <p class="text-zinc-200 break-all">{% if intel.exposure.hostnames %}{{ intel.exposure.hostnames|join:", " }}{% else %}—{% endif %}</p>
+                    </div>
+                </div>
+                {% if intel.exposure.cves %}
+                <p class="text-xs text-zinc-500 mt-4 mb-1">CVE (doğrulanmamış)</p>
+                <p class="text-xs text-zinc-400 break-all">{{ intel.exposure.cves|join:", " }}</p>
+                {% endif %}
+                {% if intel.exposure.cpes %}
+                <p class="text-xs text-zinc-500 mt-4 mb-1">CPE</p>
+                <p class="text-xs text-zinc-500 break-all">{{ intel.exposure.cpes|join:", " }}</p>
+                {% endif %}
+            </section>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

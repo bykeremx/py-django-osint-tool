@@ -1,0 +1,25 @@
+# Secrets & local env — do not commit
+.env
+
+# Python
+env/
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Django
+db.sqlite3
+media/
+staticfiles/
+
+# IDE / OS
+.idea/
+.vscode/
+.cursor/
+Thumbs.db
+Desktop.ini
+
+# Logs
+*.log

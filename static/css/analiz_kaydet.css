@@ -1,0 +1,359 @@
+/* ── Analiz raporu — sağ dock ── */
+
+.app-content:has(.analiz-save-panel--dock) {
+    padding-right: calc(20.5rem + 1.5rem);
+}
+
+.analiz-save-panel--dock {
+    position: fixed;
+    top: 3.75rem;
+    right: 0;
+    z-index: 25;
+    display: flex;
+    flex-direction: column;
+    width: 20.5rem;
+    max-height: calc(100vh - 4.25rem);
+    margin: 0.5rem 0.65rem 0.65rem 0;
+    border-radius: var(--theme-radius-lg, 0.65rem);
+    border: 1px solid var(--theme-analiz-border);
+    background: var(--theme-bg-elevated);
+    box-shadow:
+        -12px 0 40px rgba(0, 0, 0, 0.35),
+        0 0 0 1px rgba(52, 211, 153, 0.08),
+        inset 1px 0 0 rgba(52, 211, 153, 0.15);
+    overflow: hidden;
+    font-size: 0.8125rem;
+}
+
+/* Header */
+.analiz-dock__header {
+    flex-shrink: 0;
+    padding: 0.85rem 1rem;
+    border-bottom: 1px solid var(--theme-border);
+    background: linear-gradient(180deg, rgba(52, 211, 153, 0.06) 0%, transparent 100%);
+}
+
+.analiz-dock__title-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.6rem;
+}
+
+.analiz-dock__icon {
+    font-size: 1.35rem;
+    color: var(--theme-accent);
+    margin-top: 0.1rem;
+}
+
+.analiz-dock__title {
+    margin: 0;
+    font-family: "Rajdhani", sans-serif;
+    font-size: 1rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--theme-text);
+}
+
+.analiz-dock__target {
+    margin: 0.2rem 0 0;
+    font-family: ui-monospace, monospace;
+    font-size: 0.65rem;
+    color: var(--theme-text-muted);
+    word-break: break-all;
+    line-height: 1.35;
+}
+
+.analiz-dock__hint {
+    margin: 0.5rem 0 0;
+    font-size: 0.62rem;
+    letter-spacing: 0.04em;
+    color: var(--theme-text-faint);
+}
+
+/* Scrollable body */
+.analiz-dock__body {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 0.75rem 1rem;
+    scrollbar-width: thin;
+    scrollbar-color: var(--theme-border-strong) transparent;
+}
+
+.analiz-dock__section-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin-bottom: 0.35rem;
+}
+
+.analiz-dock__section-title {
+    margin: 0;
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--theme-text-muted);
+}
+
+.analiz-dock__micro {
+    margin: 0 0 0.65rem;
+    font-size: 0.58rem;
+    color: var(--theme-text-faint);
+}
+
+.analiz-dock__label {
+    display: block;
+    margin: 0.85rem 0 0.35rem;
+    font-size: 0.62rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--theme-text-muted);
+}
+
+/* Buttons */
+.analiz-add-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.2rem;
+    padding: 0.25rem 0.5rem;
+    font-size: 0.62rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    border-radius: 0.25rem;
+    border: 1px solid var(--theme-border-strong);
+    color: var(--theme-text);
+    background: transparent;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+}
+
+.analiz-add-btn .material-symbols-outlined {
+    font-size: 0.9rem;
+}
+
+.analiz-add-btn:hover {
+    background: var(--theme-surface-hover);
+    border-color: var(--theme-accent);
+    color: var(--theme-accent);
+}
+
+.analiz-items-empty {
+    margin: 0;
+    padding: 0.65rem 0;
+    font-size: 0.68rem;
+    font-style: italic;
+    color: var(--theme-text-faint);
+    text-align: center;
+    border: 1px dashed var(--theme-border);
+    border-radius: 0.35rem;
+}
+
+/* Item rows — single column for narrow dock */
+.analiz-item-row {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    padding: 0.55rem;
+    border-radius: 0.35rem;
+    border: 1px solid var(--theme-border);
+    background: var(--theme-analiz-row-bg);
+}
+
+.analiz-item-row input,
+.analiz-item-row textarea,
+.analiz-analyst-note {
+    width: 100%;
+    border-radius: 0.3rem;
+    border: 1px solid var(--theme-border-strong);
+    background: var(--theme-input-bg);
+    color: var(--theme-text);
+    font-size: 0.75rem;
+    padding: 0.4rem 0.5rem;
+    transition: border-color 0.15s;
+}
+
+.analiz-item-key {
+    font-family: ui-monospace, monospace;
+}
+
+.analiz-item-row input:focus,
+.analiz-item-row textarea:focus,
+.analiz-analyst-note:focus {
+    outline: none;
+    border-color: var(--theme-accent);
+}
+
+.analiz-item-row textarea,
+.analiz-analyst-note {
+    resize: vertical;
+    min-height: 2.5rem;
+}
+
+.analiz-item-remove {
+    align-self: flex-end;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.2rem 0.45rem;
+    border-radius: 0.25rem;
+    border: 1px solid rgba(248, 113, 113, 0.35);
+    color: #f87171;
+    background: transparent;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.analiz-item-remove .material-symbols-outlined {
+    font-size: 0.95rem;
+}
+
+.analiz-item-remove:hover {
+    background: rgba(127, 29, 29, 0.25);
+}
+
+[data-theme="light"] .analiz-item-remove {
+    color: #dc2626;
+    border-color: rgba(220, 38, 38, 0.35);
+}
+
+[data-theme="light"] .analiz-item-remove:hover {
+    background: rgba(254, 202, 202, 0.45);
+}
+
+/* Footer */
+.analiz-dock__footer {
+    flex-shrink: 0;
+    padding: 0.75rem 1rem;
+    border-top: 1px solid var(--theme-border);
+    background: rgba(0, 0, 0, 0.2);
+}
+
+[data-theme="light"] .analiz-dock__footer {
+    background: var(--theme-surface-hover);
+}
+
+.analiz-save-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    width: 100%;
+    padding: 0.55rem 0.75rem;
+    border-radius: 0.35rem;
+    border: 1px solid var(--theme-analiz-btn-border);
+    background: var(--theme-analiz-btn-bg);
+    color: var(--theme-analiz-btn-text);
+    font-size: 0.75rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.15s, box-shadow 0.15s;
+}
+
+.analiz-save-btn:hover {
+    background: var(--theme-analiz-btn-hover);
+    box-shadow: 0 0 12px rgba(52, 211, 153, 0.15);
+}
+
+.analiz-save-btn:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+.analiz-save-btn .material-symbols-outlined {
+    font-size: 1rem;
+}
+
+.analiz-save-status {
+    display: block;
+    margin-top: 0.45rem;
+    font-size: 0.65rem;
+    line-height: 1.4;
+    color: var(--theme-text-faint);
+    min-height: 1rem;
+}
+
+.analiz-save-status.text-emerald-400,
+.analiz-save-status.is-success {
+    color: var(--theme-accent);
+}
+
+.analiz-save-status.text-red-400,
+.analiz-save-status.is-error {
+    color: #f87171;
+}
+
+.analiz-save-status a {
+    color: var(--theme-accent);
+    text-decoration: underline;
+}
+
+/* Legacy / detay sayfası */
+.analiz-save-panel:not(.analiz-save-panel--dock) {
+    background: var(--theme-surface) !important;
+    border: 1px solid var(--theme-analiz-border) !important;
+    border-radius: 0.5rem;
+    padding: 1.25rem;
+    max-width: 48rem;
+}
+
+.analiz-detail-panel {
+    background: var(--theme-surface) !important;
+    border: 1px solid var(--theme-analiz-border) !important;
+    border-radius: 0.5rem;
+    padding: 1.25rem;
+}
+
+.analiz-detail-item {
+    border: 1px solid var(--theme-border) !important;
+    background: var(--theme-analiz-row-bg) !important;
+    border-radius: 0.35rem;
+    padding: 1rem;
+}
+
+.analiz-detail-add-btn {
+    border: 1px solid var(--theme-analiz-btn-border) !important;
+    background: var(--theme-analiz-btn-bg) !important;
+    color: var(--theme-analiz-btn-text) !important;
+    border-radius: 0.35rem;
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+}
+
+.analiz-detail-add-btn:hover {
+    background: var(--theme-analiz-btn-hover) !important;
+}
+
+/* Mobil — altta tam genişlik */
+@media (max-width: 1023px) {
+    .app-content:has(.analiz-save-panel--dock) {
+        padding-right: 1.5rem;
+        padding-bottom: calc(14rem + 1rem);
+    }
+
+    .analiz-save-panel--dock {
+        top: auto;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        width: auto;
+        max-height: 42vh;
+        margin: 0;
+        border-radius: 0.75rem 0.75rem 0 0;
+        border-right: none;
+        border-bottom: none;
+        box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.4);
+    }
+}
+
+@media (max-width: 767px) {
+    .app-content:has(.analiz-save-panel--dock) {
+        padding-bottom: calc(16rem + 0.5rem);
+    }
+
+    .analiz-save-panel--dock {
+        max-height: 48vh;
+    }
+}

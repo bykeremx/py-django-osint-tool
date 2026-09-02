@@ -1,0 +1,311 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}DNS Recon | CYBER OPS{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/pages/dns_scan.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="page-dns-scan">
+<div class="mb-8">
+    <p class="text-[10px] tracking-[0.3em] text-zinc-500 uppercase">Modül 02</p>
+    <h2 class="font-display text-3xl font-bold tracking-wide flex items-center gap-2 mt-1">
+        <span class="material-symbols-outlined text-emerald-400">dns</span>
+        DNS recon
+    </h2>
+    <p class="text-zinc-500 text-sm mt-2">DNS · PTR · HTTP · WHOIS · sayfa kopyası</p>
+</div>
+
+<div class="space-y-6">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <section class="bg-zinc-950 border border-zinc-800 rounded-lg p-5">
+            <h3 class="font-display text-lg text-zinc-100 flex items-center gap-2">
+                <span class="material-symbols-outlined text-zinc-500">my_location</span>
+                Hedef
+            </h3>
+            <p class="text-xs text-zinc-500 mt-1 mb-4">Yalnızca yetkin olduğun domainleri tara.</p>
+            <form action="{% url 'dns_scan' %}" method="post" data-scan-queue class="flex gap-2 scan-queue-form">
+                {% csrf_token %}
+                <input
+                    type="text"
+                    name="domain"
+                    id="domain"
+                    value="{{ domain|default:'' }}"
+                    placeholder="ornek.com"
+                    required
+                    class="flex-1 rounded-md border border-zinc-800 bg-black px-3 py-2 text-sm text-zinc-100 placeholder-zinc-600 focus:border-zinc-500 focus:outline-none"
+                >
+                <button type="submit" class="inline-flex items-center gap-1 shrink-0 rounded-md bg-zinc-100 px-4 py-2 text-sm text-zinc-900 hover:bg-white">
+                    <span class="material-symbols-outlined text-base">search</span>
+                    Tara
+                </button>
+            </form>
+        </section>
+
+        {% if error %}
+        <div class="rounded-lg border border-red-900 bg-red-950/50 p-5 text-sm text-red-200 flex gap-2">
+            <span class="material-symbols-outlined text-red-400 shrink-0">error</span>
+            <p>{{ error }}</p>
+        </div>
+        {% elif dns_scan %}
+        {% include 'partials/analiz_kaydet.html' %}
+        {% else %}
+        <section class="bg-zinc-950 border border-zinc-800 rounded-lg p-5 flex items-center gap-3 text-zinc-500 text-sm">
+            <span class="material-symbols-outlined">info</span>
+            Domain girip Tara’ya bas; sonuçlar yanında ve altta açılır.
+        </section>
+        {% endif %}
+    </div>
+
+    {% if dns_scan %}
+    <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
+        <section class="bg-zinc-950 border border-zinc-800 rounded-lg p-5">
+            <h3 class="font-display text-lg text-zinc-100 flex items-center gap-2 mb-1">
+                <span class="material-symbols-outlined text-zinc-500">list_alt</span>
+                DNS
+            </h3>
+            <p class="text-xs text-zinc-500 mb-4">A / AAAA adres · MX posta · TXT politika</p>
+            <div class="overflow-auto max-h-80">
+                <table class="w-full text-sm">
+                    <tbody>
+                        {% for record_type, values in dns_scan.dns.items %}
+                        <tr class="align-top border-b border-zinc-800/80">
+                            <td class="py-2.5 pr-4 w-16 font-medium text-zinc-200">{{ record_type }}</td>
+                            <td class="py-2.5 text-zinc-400 leading-relaxed">
+                                {% if values %}
+                                    {% for value in values %}
+                                    <div class="break-all {% if not forloop.last %}mb-1{% endif %}">{{ value }}</div>
+                                    {% endfor %}
+                                {% else %}
+                                    <span class="text-zinc-600">—</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="bg-zinc-950 border border-zinc-800 rounded-lg p-5">
+            <h3 class="font-display text-lg text-zinc-100 flex items-center gap-2 mb-1">
+                <span class="material-symbols-outlined text-zinc-500">swap_horiz</span>
+                PTR
+            </h3>
+            <p class="text-xs text-zinc-500 mb-4">IP → hostname</p>
+            {% if dns_scan.reverse_dns %}
+            <div class="overflow-auto max-h-80">
+                <table class="w-full text-sm">
+                    <tbody>
+                        {% for entry in dns_scan.reverse_dns %}
+                        <tr class="border-b border-zinc-800/80">
+                            <td class="py-2.5 pr-4 text-zinc-200 whitespace-nowrap">{{ entry.ip }}</td>
+                            <td class="py-2.5 text-zinc-400 break-all">
+                                {% if entry.hostnames %}{{ entry.hostnames|join:", " }}{% else %}—{% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-sm text-zinc-600">Kayıt yok</p>
+            {% endif %}
+        </section>
+
+        <section class="bg-zinc-950 border border-zinc-800 rounded-lg p-5 xl:col-span-2">
+            <h3 class="font-display text-lg text-zinc-100 flex items-center gap-2 mb-1">
+                <span class="material-symbols-outlined text-zinc-500">hub</span>
+                Subdomain
+            </h3>
+            <p class="text-xs text-zinc-500 mb-4">
+                CT (crt.sh) + kısa wordlist; yalnızca çözülenler.
+                {% if dns_scan.subdomains.sources %}
+                CT aday {{ dns_scan.subdomains.sources.ct }} · wordlist {{ dns_scan.subdomains.sources.wordlist }}
+                {% endif %}
+            </p>
+            {% if dns_scan.subdomains.error %}
+            <p class="text-sm text-amber-300">{{ dns_scan.subdomains.error }}</p>
+            {% elif dns_scan.subdomains.items %}
+            <div class="overflow-auto max-h-80">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="text-left text-xs text-zinc-500 border-b border-zinc-800">
+                            <th class="py-2 pr-4">Host</th>
+                            <th class="py-2 pr-4">Kayıt</th>
+                            <th class="py-2">Kaynak</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in dns_scan.subdomains.items %}
+                        <tr class="align-top border-b border-zinc-800/80">
+                            <td class="py-2.5 pr-4 text-zinc-200 break-all">{{ item.host }}</td>
+                            <td class="py-2.5 pr-4 text-zinc-400">
+                                {% for rec in item.records %}
+                                <div class="break-all">{{ rec }}</div>
+                                {% endfor %}
+                            </td>
+                            <td class="py-2.5 text-zinc-500 whitespace-nowrap">{{ item.sources|join:", " }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-sm text-zinc-600">Çözülen subdomain yok (veya CT yanıt vermedi).</p>
+            {% endif %}
+        </section>
+
+        <section class="bg-zinc-950 border border-zinc-800 rounded-lg p-5">
+            <h3 class="font-display text-lg text-zinc-100 flex items-center gap-2 mb-1">
+                <span class="material-symbols-outlined text-zinc-500">language</span>
+                HTTP
+            </h3>
+            {% if dns_scan.web_analisis %}
+            <p class="text-xs text-zinc-500 mb-4 break-all leading-relaxed">
+                {{ dns_scan.web_analisis.url }}
+                {% if dns_scan.web_analisis.status_code %}
+                <span class="text-zinc-300"> · {{ dns_scan.web_analisis.status_code }}</span>
+                {% endif %}
+            </p>
+            {% if dns_scan.web_analisis.error %}
+            <p class="text-sm text-amber-300 mb-4">{{ dns_scan.web_analisis.error }}</p>
+            {% endif %}
+
+            <p class="text-xs text-zinc-500 mb-2">Backend</p>
+            {% if dns_scan.web_analisis.backend %}
+            <div class="space-y-2 mb-5">
+                {% for item in dns_scan.web_analisis.backend %}
+                <div class="text-sm">
+                    <span class="text-zinc-100">{{ item.name }}</span>
+                    <span class="text-zinc-500"> · {{ item.language }}</span>
+                    {% if item.evidence %}
+                    <p class="text-xs text-zinc-600 mt-0.5 break-all">{{ item.evidence|join:", " }}</p>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-sm text-zinc-600 mb-5">Backend imzası yok (gizli veya reverse proxy).</p>
+            {% endif %}
+
+            <p class="text-xs text-zinc-500 mb-2">Teknoloji</p>
+            {% if dns_scan.web_analisis.technologies %}
+            <div class="flex flex-wrap gap-1.5 mb-5">
+                {% for tech in dns_scan.web_analisis.technologies %}
+                <span class="rounded border border-zinc-800 px-2 py-0.5 text-xs text-zinc-300">{{ tech }}</span>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-sm text-zinc-600 mb-5">Tespit yok</p>
+            {% endif %}
+
+            {% if dns_scan.web_analisis.headers %}
+            <p class="text-xs text-zinc-500 mb-2">Başlıklar</p>
+            <div class="overflow-auto max-h-52 space-y-2">
+                {% for name, value in dns_scan.web_analisis.headers.items %}
+                <div class="text-xs leading-relaxed">
+                    <div class="text-zinc-300">{{ name }}</div>
+                    <div class="text-zinc-500 break-all">{{ value }}</div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+            {% else %}
+            <p class="text-sm text-zinc-600">Veri yok</p>
+            {% endif %}
+        </section>
+
+        <section class="bg-zinc-950 border border-zinc-800 rounded-lg p-5">
+            <h3 class="font-display text-lg text-zinc-100 flex items-center gap-2 mb-1">
+                <span class="material-symbols-outlined text-zinc-500">badge</span>
+                WHOIS
+            </h3>
+            <p class="text-xs text-zinc-500 mb-4">Kayıt gizliliği varsa alanlar boş gelebilir.</p>
+            {% if dns_scan.whois.error %}
+            <p class="text-sm text-amber-300">{{ dns_scan.whois.error }}</p>
+            {% else %}
+            <dl class="space-y-3 text-sm">
+                <div class="grid grid-cols-[7.5rem_1fr] gap-2">
+                    <dt class="text-zinc-500">Registrar</dt>
+                    <dd class="text-zinc-200 break-all">{{ dns_scan.whois.registrar }}</dd>
+                </div>
+                <div class="grid grid-cols-[7.5rem_1fr] gap-2">
+                    <dt class="text-zinc-500">Sunucu</dt>
+                    <dd class="text-zinc-200 break-all">{{ dns_scan.whois.whois_server }}</dd>
+                </div>
+                <div class="grid grid-cols-[7.5rem_1fr] gap-2">
+                    <dt class="text-zinc-500">Org</dt>
+                    <dd class="text-zinc-200 break-all">{{ dns_scan.whois.org }}</dd>
+                </div>
+                <div class="grid grid-cols-[7.5rem_1fr] gap-2">
+                    <dt class="text-zinc-500">Sahip</dt>
+                    <dd class="text-zinc-200 break-all">{{ dns_scan.whois.registrant }}</dd>
+                </div>
+                <div class="grid grid-cols-[7.5rem_1fr] gap-2">
+                    <dt class="text-zinc-500">Ülke</dt>
+                    <dd class="text-zinc-200">{{ dns_scan.whois.country }}</dd>
+                </div>
+                <div class="grid grid-cols-[7.5rem_1fr] gap-2">
+                    <dt class="text-zinc-500">DNSSEC</dt>
+                    <dd class="text-zinc-200">{{ dns_scan.whois.dnssec }}</dd>
+                </div>
+                <div class="grid grid-cols-[7.5rem_1fr] gap-2">
+                    <dt class="text-zinc-500">Oluşturma</dt>
+                    <dd class="text-zinc-200">{{ dns_scan.whois.creation_date }}</dd>
+                </div>
+                <div class="grid grid-cols-[7.5rem_1fr] gap-2">
+                    <dt class="text-zinc-500">Güncelleme</dt>
+                    <dd class="text-zinc-200">{{ dns_scan.whois.updated_date }}</dd>
+                </div>
+                <div class="grid grid-cols-[7.5rem_1fr] gap-2">
+                    <dt class="text-zinc-500">Bitiş</dt>
+                    <dd class="text-zinc-200">{{ dns_scan.whois.expiration_date }}</dd>
+                </div>
+                <div class="grid grid-cols-[7.5rem_1fr] gap-2">
+                    <dt class="text-zinc-500">E-posta</dt>
+                    <dd class="text-zinc-200 break-all">{% if dns_scan.whois.emails %}{{ dns_scan.whois.emails|join:", " }}{% else %}—{% endif %}</dd>
+                </div>
+                <div class="grid grid-cols-[7.5rem_1fr] gap-2">
+                    <dt class="text-zinc-500">NS</dt>
+                    <dd class="text-zinc-200 break-all">{% if dns_scan.whois.name_servers %}{{ dns_scan.whois.name_servers|join:", " }}{% else %}—{% endif %}</dd>
+                </div>
+                <div class="grid grid-cols-[7.5rem_1fr] gap-2">
+                    <dt class="text-zinc-500">Durum</dt>
+                    <dd class="text-zinc-400 break-all leading-relaxed">{% if dns_scan.whois.status %}{{ dns_scan.whois.status|join:" · " }}{% else %}—{% endif %}</dd>
+                </div>
+            </dl>
+            {% endif %}
+        </section>
+    </div>
+
+    {% if dns_scan.site_snapshot %}
+    <section class="bg-zinc-950 border border-zinc-800 rounded-lg p-5">
+        <h3 class="font-display text-lg text-zinc-100 flex items-center gap-2 mb-1">
+            <span class="material-symbols-outlined text-zinc-500">folder_zip</span>
+            Sayfa kopyası
+        </h3>
+        <p class="text-xs text-zinc-500 mb-4">Render DOM + indirilen JS/CSS. Vue kaynak dosyası yalnızca source map varsa gelir.</p>
+        {% if dns_scan.site_snapshot.error %}
+        <p class="text-sm text-amber-300">{{ dns_scan.site_snapshot.error }}</p>
+        {% else %}
+        <p class="text-xs text-zinc-500 mb-4">{{ dns_scan.site_snapshot.file_count }} dosya</p>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <ul class="max-h-72 overflow-auto text-sm space-y-1.5">
+                {% for file in dns_scan.site_snapshot.files %}
+                <li>
+                    <a href="/media/site_snapshots/{{ dns_scan.domain }}/{{ file }}" class="text-zinc-300 hover:text-white break-all" target="_blank" rel="noopener">{{ file }}</a>
+                </li>
+                {% endfor %}
+            </ul>
+            <pre class="max-h-72 overflow-auto text-xs text-zinc-500 leading-relaxed whitespace-pre-wrap break-all">{{ dns_scan.site_snapshot.dom_preview }}</pre>
+        </div>
+        {% endif %}
+    </section>
+    {% endif %}
+    {% endif %}
+</div>
+</div>
+{% endblock %}

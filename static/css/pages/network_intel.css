@@ -1,0 +1,11 @@
+.page-network-intel section {
+    min-width: 0;
+}
+
+.page-network-intel .threat-high {
+    color: #f87171;
+}
+
+.page-network-intel .threat-medium {
+    color: #fbbf24;
+}

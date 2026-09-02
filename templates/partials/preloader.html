@@ -1,0 +1,39 @@
+<div id="preloader" aria-busy="true" aria-label="Sistem başlatılıyor">
+    <div class="preloader-matrix" aria-hidden="true"></div>
+    <div class="preloader-grid" aria-hidden="true"></div>
+    <div class="preloader-scan" aria-hidden="true"></div>
+    <div class="preloader-noise" aria-hidden="true"></div>
+
+    <div class="preloader-panel">
+        <header class="preloader-header">
+            <span class="preloader-dot preloader-dot--red"></span>
+            <span class="preloader-dot preloader-dot--amber"></span>
+            <span class="preloader-dot preloader-dot--green"></span>
+            <span class="preloader-header__title">root@cyberops:~# ./init_recon.sh</span>
+            <span class="preloader-header__blink">_</span>
+        </header>
+
+        <div class="preloader-terminal" id="preloader-terminal" aria-live="polite"></div>
+
+        <div class="preloader-brand">
+            <div class="preloader-hex-ring" aria-hidden="true"></div>
+            <h1 class="preloader-glitch" data-text="CYBER OPS">CYBER OPS</h1>
+            <p class="preloader-tagline" id="preloader-status">[ INIT ] Şifreli kanal kuruluyor…</p>
+        </div>
+
+        <div class="preloader-progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+            <div class="preloader-progress__track">
+                <div class="preloader-progress__bar" id="preloader-progress-bar"></div>
+            </div>
+            <span class="preloader-progress__pct" id="preloader-progress-pct">0%</span>
+        </div>
+
+        <footer class="preloader-footer">
+            <span class="preloader-footer__item">NODE: HQ-01</span>
+            <span class="preloader-footer__sep">|</span>
+            <span class="preloader-footer__item">CLEARANCE: ANALYST</span>
+            <span class="preloader-footer__sep">|</span>
+            <span class="preloader-footer__item preloader-footer__warn">AUTHORIZED USE ONLY</span>
+        </footer>
+    </div>
+</div>

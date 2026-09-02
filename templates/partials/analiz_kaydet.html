@@ -1,0 +1,66 @@
+<aside class="analiz-save-panel analiz-save-panel--dock" aria-label="Analiz raporu">
+    <header class="analiz-dock__header">
+        <div class="analiz-dock__title-row">
+            <span class="material-symbols-outlined analiz-dock__icon">fact_check</span>
+            <div class="analiz-dock__title-text">
+                <h3 class="analiz-dock__title">Analiz raporu</h3>
+                <p class="analiz-dock__target" title="{{ analiz_target }}">{{ analiz_target }}</p>
+            </div>
+        </div>
+        <p class="analiz-dock__hint">JSON kaydet · madde madde bulgu ekle</p>
+    </header>
+
+    <div class="analiz-dock__body">
+        <div class="analiz-dock__section-head">
+            <h4 class="analiz-dock__section-title">Maddeler</h4>
+            <button type="button" class="analiz-add-btn" data-analiz-add-item>
+                <span class="material-symbols-outlined">add</span>
+                Ekle
+            </button>
+        </div>
+        <p class="analiz-dock__micro">key: domain, risk, mx · value: notun</p>
+        <div class="analiz-items-list space-y-2"></div>
+        <p class="analiz-items-empty">Henüz madde yok.</p>
+
+        <label class="analiz-dock__label">Genel not</label>
+        <textarea
+            class="analiz-analyst-note"
+            rows="3"
+            placeholder="Kısa analist özeti…"
+        ></textarea>
+    </div>
+
+    <footer class="analiz-dock__footer">
+        <button
+            type="button"
+            class="analiz-save-btn"
+            data-analiz-save
+            data-analiz-module="{{ analiz_module }}"
+            data-analiz-target="{{ analiz_target }}"
+        >
+            <span class="material-symbols-outlined">save</span>
+            Kaydet &amp; JSON indir
+        </button>
+        <span class="analiz-save-status"></span>
+    </footer>
+
+    <template class="analiz-item-row-template">
+        <div class="analiz-item-row">
+            <input
+                type="text"
+                class="analiz-item-key"
+                placeholder="key"
+                maxlength="512"
+            >
+            <textarea
+                class="analiz-item-value"
+                rows="2"
+                placeholder="Bulgu / not…"
+            ></textarea>
+            <button type="button" class="analiz-item-remove" title="Kaldır">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+    </template>
+</aside>
+{% if analiz_report %}{{ analiz_report|json_script:"analiz-report-data" }}{% endif %}

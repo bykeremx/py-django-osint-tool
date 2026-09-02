@@ -1,0 +1,140 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Nmap Scan | CYBER OPS{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/pages/nmap_scan.css' %}?v=2">
+{% endblock %}
+
+{% block content %}
+<div class="page-nmap-scan">
+    <div class="mb-8">
+        <p class="text-[10px] tracking-[0.3em] text-zinc-500 uppercase">Modül 07</p>
+        <h2 class="font-display text-3xl font-bold tracking-wide flex items-center gap-2 mt-1">
+            <span class="material-symbols-outlined text-emerald-400">router</span>
+            Nmap scan
+        </h2>
+        <p class="text-zinc-500 text-sm mt-2">Port tarama · servis tespiti · python-nmap</p>
+    </div>
+
+    <div class="space-y-6">
+        <section class="rounded-lg p-5 max-w-3xl nmap-setup-warning">
+            <h3 class="font-display text-base flex items-center gap-2">
+                <span class="material-symbols-outlined text-amber-400">warning</span>
+                Nmap binary gerekli
+            </h3>
+            <p class="text-sm mt-2">
+                <code>python-nmap</code> yalnızca sarmalayıcıdır — tarama için sistemde
+                <strong>Nmap programının</strong> kurulu ve PATH'te olması gerekir.
+            </p>
+            <ol class="mt-4 space-y-2 text-sm list-decimal list-inside">
+                <li>
+                    <a href="https://nmap.org/download.html" target="_blank" rel="noopener" class="underline">nmap.org/download.html</a>
+                    → Windows installer indir
+                </li>
+                <li>Kurulumda <strong>«Add Nmap to system PATH»</strong> seçeneğini işaretle</li>
+                <li>Terminal / IDE'yi kapatıp yeniden aç</li>
+                <li>Doğrula: <code>nmap --version</code></li>
+            </ol>
+            <p class="text-xs theme-warning-muted mt-3 flex items-start gap-2">
+                <span class="material-symbols-outlined text-sm shrink-0 mt-0.5">info</span>
+                PATH'e eklenmediyse tarama «Nmap binary bulunamadı» hatası verir.
+            </p>
+        </section>
+
+        <section class="bg-zinc-950 border border-zinc-800 rounded-lg p-5 max-w-3xl">
+            <h3 class="font-display text-lg text-zinc-100 flex items-center gap-2">
+                <span class="material-symbols-outlined text-zinc-500">my_location</span>
+                Hedef
+            </h3>
+            <p class="text-xs text-zinc-500 mt-1 mb-4">IP veya hostname · Yalnızca yetkili hedefler · Windows: TCP connect scan (-sT)</p>
+            <form action="{% url 'nmap_scan' %}" method="post" data-scan-queue class="flex flex-wrap gap-2 scan-queue-form">
+                {% csrf_token %}
+                <input type="text" name="target" value="{{ target|default:'' }}" placeholder="192.168.1.1 veya hedef.com" required
+                    class="flex-1 min-w-[12rem] rounded-md border border-zinc-800 bg-black px-3 py-2 text-sm text-zinc-100 placeholder-zinc-600 focus:border-zinc-500 focus:outline-none font-mono">
+                <select name="scan_mode" class="rounded-md border border-zinc-800 bg-black px-3 py-2 text-sm text-zinc-200 focus:border-zinc-500 focus:outline-none">
+                    <option value="quick" {% if scan_mode == 'quick' %}selected{% endif %}>Hızlı (~1 dk)</option>
+                    <option value="standard" {% if scan_mode == 'standard' or not scan_mode %}selected{% endif %}>Standart (~3–5 dk)</option>
+                    <option value="deep" {% if scan_mode == 'deep' %}selected{% endif %}>Derin (tüm portlar)</option>
+                </select>
+                <button type="submit" class="inline-flex items-center gap-1 shrink-0 rounded-md bg-zinc-100 px-4 py-2 text-sm text-zinc-900 hover:bg-white">
+                    <span class="material-symbols-outlined text-base">radar</span>
+                    Tara
+                </button>
+            </form>
+        </section>
+
+        {% if error %}
+        <div class="rounded-lg border border-red-900 bg-red-950/50 p-5 text-sm text-red-200 flex gap-2 max-w-3xl">
+            <span class="material-symbols-outlined text-red-400 shrink-0">error</span>
+            <p>{{ error }}</p>
+        </div>
+        {% endif %}
+
+        {% if scan and not scan.error %}
+        {% include 'partials/analiz_kaydet.html' %}
+
+        <section class="bg-zinc-950 border border-zinc-800 rounded-lg p-5">
+            <div class="flex flex-wrap items-end justify-between gap-4">
+                <div>
+                    <p class="text-xs text-zinc-500">Hedef</p>
+                    <p class="font-display text-xl text-zinc-100 font-mono">{{ scan.target }}</p>
+                    <p class="text-xs text-zinc-500 mt-1">{{ scan.scan_mode_label }} · {{ scan.summary.elapsed_seconds }} sn</p>
+                </div>
+                <div class="flex flex-wrap gap-5 text-sm">
+                    <div><p class="text-xs text-zinc-500">Host (up)</p><p class="text-2xl font-display text-emerald-400">{{ scan.summary.hosts_up }}</p></div>
+                    <div><p class="text-xs text-zinc-500">Açık port</p><p class="text-2xl font-display text-zinc-100">{{ scan.summary.open_ports }}</p></div>
+                </div>
+            </div>
+            {% if scan.nmap_command %}
+            <pre class="nmap-cmd mt-4 p-3 rounded bg-zinc-900/80 border border-zinc-800 text-zinc-500">{{ scan.nmap_command }}</pre>
+            {% endif %}
+        </section>
+
+        {% for host in scan.hosts %}
+        <section class="bg-zinc-950 border border-zinc-800 rounded-lg p-5">
+            <div class="flex flex-wrap items-center gap-3 mb-4">
+                <h3 class="font-display text-lg text-zinc-100 font-mono">{{ host.host }}</h3>
+                {% if host.hostname %}<span class="text-xs text-zinc-500">{{ host.hostname }}</span>{% endif %}
+                <span class="text-xs uppercase px-2 py-0.5 rounded border {% if host.state == 'up' %}border-emerald-800 text-emerald-400{% else %}border-zinc-700 text-zinc-500{% endif %}">{{ host.state }}</span>
+            </div>
+
+            {% if host.ports %}
+            <div class="overflow-auto max-h-[28rem] border border-zinc-800 rounded">
+                <table class="w-full text-sm text-left">
+                    <thead class="text-xs text-zinc-500 uppercase bg-zinc-900/80 sticky top-0">
+                        <tr>
+                            <th class="px-3 py-2">Port</th>
+                            <th class="px-3 py-2">Proto</th>
+                            <th class="px-3 py-2">Servis</th>
+                            <th class="px-3 py-2">Ürün / sürüm</th>
+                            <th class="px-3 py-2">Ek</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for p in host.ports %}
+                        <tr class="border-t border-zinc-800/80 hover:bg-zinc-900/40">
+                            <td class="px-3 py-2 port-open font-mono">{{ p.port }}</td>
+                            <td class="px-3 py-2 text-zinc-500">{{ p.protocol }}</td>
+                            <td class="px-3 py-2 text-zinc-300">{{ p.service|default:"—" }}</td>
+                            <td class="px-3 py-2 text-zinc-400 text-xs">
+                                {% if p.product %}{{ p.product }}{% if p.version %} {{ p.version }}{% endif %}{% else %}—{% endif %}
+                            </td>
+                            <td class="px-3 py-2 text-zinc-600 text-xs break-all">{{ p.extrainfo|default:"—" }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-sm text-zinc-600">Açık port bulunamadı veya host down.</p>
+            {% endif %}
+        </section>
+        {% empty %}
+        <p class="text-sm text-zinc-600">Host sonucu yok.</p>
+        {% endfor %}
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

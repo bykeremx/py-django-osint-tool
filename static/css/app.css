@@ -1,0 +1,101 @@
+.material-symbols-outlined {
+    font-family: "Material Symbols Outlined";
+    font-weight: normal;
+    font-style: normal;
+    font-size: 20px;
+    line-height: 1;
+    letter-spacing: normal;
+    display: inline-block;
+    vertical-align: middle;
+    font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
+}
+
+body {
+    background: var(--theme-bg, #09090b);
+}
+
+.nav-active {
+    background: var(--theme-surface, #18181b) !important;
+    border-color: var(--theme-border-strong, #3f3f46) !important;
+    color: var(--theme-text, #fafafa) !important;
+}
+
+/* Sidebar — genişlik burada (Tailwind w-64 ile çakışmasın) */
+.app-sidebar {
+    width: 16rem;
+    transition: width 0.22s ease, transform 0.22s ease, padding 0.22s ease;
+}
+
+.app-shell.is-sidebar-collapsed .app-sidebar {
+    width: 4.25rem !important;
+    padding-left: 0.65rem !important;
+    padding-right: 0.65rem !important;
+}
+
+.app-shell.is-sidebar-collapsed .app-sidebar__brand-text,
+.app-shell.is-sidebar-collapsed .sidebar-link__label {
+    opacity: 0;
+    width: 0;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+.app-shell.is-sidebar-collapsed .sidebar-link {
+    justify-content: center;
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+}
+
+.app-shell.is-sidebar-collapsed .app-sidebar__footer-text {
+    justify-content: center;
+}
+
+@keyframes topbar-pulse {
+    0%, 100% { opacity: 0.45; transform: scale(0.9); }
+    50% { opacity: 1; transform: scale(1); }
+}
+
+.topbar-pending-badge__dot {
+    animation: topbar-pulse 1.2s ease-in-out infinite;
+}
+
+/* Mobil: off-canvas */
+@media (max-width: 767px) {
+    .app-sidebar {
+        position: fixed;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        z-index: 50;
+        width: 16rem !important;
+        box-shadow: 4px 0 24px rgba(0, 0, 0, 0.5);
+        transform: translateX(0);
+    }
+
+    .app-shell.is-sidebar-collapsed .app-sidebar {
+        transform: translateX(-100%) !important;
+    }
+
+    .app-shell.is-sidebar-collapsed .app-sidebar__brand-text,
+    .app-shell.is-sidebar-collapsed .sidebar-link__label {
+        opacity: 1;
+        width: auto;
+        pointer-events: auto;
+    }
+
+    .app-shell.is-sidebar-collapsed .sidebar-link {
+        justify-content: flex-start;
+        padding-left: 0.75rem;
+        padding-right: 0.75rem;
+    }
+
+    .app-sidebar-backdrop.is-visible {
+        display: block !important;
+    }
+}
+
+@media (min-width: 768px) {
+    .app-sidebar-backdrop {
+        display: none !important;
+    }
+}

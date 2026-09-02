@@ -1,0 +1,35 @@
+env/
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.pyo
+.git/
+.gitignore
+.cursor/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.log
+db.sqlite3
+agent-transcripts/
+terminals/
+python
+
+# Secrets — never bake into image
+.env
+.env.*
+!.env.example
+
+# Local media — use named volume in compose
+media/
+
+# IDE / OS
+.idea/
+.vscode/
+Thumbs.db
+Desktop.ini
+
+# Docs (not needed in runtime image)
+*.md
+!README.md

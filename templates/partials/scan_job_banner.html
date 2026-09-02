@@ -1,0 +1,19 @@
+{% if scan_job_banner %}
+
+<div class="mb-6 rounded-lg px-4 py-3 text-sm flex flex-wrap items-center gap-3 theme-warning-panel">
+
+    <span class="material-symbols-outlined text-amber-400">hourglass_top</span>
+
+    <p class="flex-1 min-w-[12rem]">Bu tarama hâlâ kuyrukta. Başka modüllere geçebilirsiniz; ilerleme üst bardaki işlem şeridinde görünür.</p>
+
+    <a href="{% url 'dashboard' %}" class="text-xs border border-amber-700 px-3 py-1 rounded hover:opacity-90">Komuta paneli</a>
+
+    {% if scan_job_id %}
+    <button type="button" class="scan-cancel-btn" data-scan-cancel="{{ scan_job_id }}">
+        <span class="material-symbols-outlined text-sm">close</span>
+        İptal et
+    </button>
+    {% endif %}
+
+</div>{% endif %}
+

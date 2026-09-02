@@ -1,0 +1,145 @@
+# CYBER OPS — Docker Compose
+#
+# Infra only (local Django: py manage.py runserver):
+#   docker compose --profile infra up -d
+#
+# Full stack (web + worker + infra):
+#   docker compose --profile infra --profile app up --build -d
+#
+# Stop:
+#   docker compose --profile infra --profile app down
+
+name: cyberops
+
+x-db-env: &db-env
+  MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-88226858}
+  MYSQL_DATABASE: ${DJANGO_DB_NAME:-__django_app_db__}
+  TZ: UTC
+
+x-app-env: &app-env
+  env_file:
+    - path: .env
+      required: false
+  environment: &django-env
+    DJANGO_DEBUG: ${DJANGO_DEBUG:-true}
+    DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:-django-insecure-dev-key-change-me}
+    DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS:-localhost,127.0.0.1,web,0.0.0.0}
+    DJANGO_DB_NAME: ${DJANGO_DB_NAME:-__django_app_db__}
+    DJANGO_DB_USER: ${DJANGO_DB_USER:-root}
+    DJANGO_DB_PASSWORD: ${DJANGO_DB_PASSWORD:-88226858}
+    DJANGO_DB_HOST: db
+    DJANGO_DB_PORT: "3306"
+    REDIS_HOST: redis
+    REDIS_PORT: "6379"
+    REDIS_DB: ${REDIS_DB:-0}
+    SCAN_USE_BACKGROUND_QUEUE: ${SCAN_USE_BACKGROUND_QUEUE:-true}
+    TZ: UTC
+
+services:
+  db:
+    profiles: [infra, app]
+    image: mysql:8.4
+    container_name: cyberops-mysql
+    restart: unless-stopped
+    environment: *db-env
+    ports:
+      - "${MYSQL_PORT:-3306}:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - cyberops_net
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$$MYSQL_ROOT_PASSWORD || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 24
+      start_period: 30s
+
+  redis:
+    profiles: [infra, app]
+    image: redis:7-alpine
+    container_name: cyberops-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - cyberops_net
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+
+  phpmyadmin:
+    profiles: [infra, app]
+    image: phpmyadmin/phpmyadmin
+    container_name: cyberops-phpmyadmin
+    restart: unless-stopped
+    environment:
+      PMA_HOST: db
+      PMA_USER: root
+      PMA_PASSWORD: ${MYSQL_ROOT_PASSWORD:-88226858}
+      UPLOAD_LIMIT: 64M
+    ports:
+      - "${PHPMYADMIN_PORT:-8080}:80"
+    networks:
+      - cyberops_net
+    depends_on:
+      db:
+        condition: service_healthy
+
+  web:
+    profiles: [app]
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: cyberops-app:latest
+    container_name: cyberops-web
+    restart: unless-stopped
+    <<: *app-env
+    command: web
+    ports:
+      - "${WEB_PORT:-8000}:8000"
+    volumes:
+      - media_data:/app/media
+    networks:
+      - cyberops_net
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  worker:
+    profiles: [app]
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: cyberops-app:latest
+    container_name: cyberops-worker
+    restart: unless-stopped
+    <<: *app-env
+    command: worker
+    volumes:
+      - media_data:/app/media
+    networks:
+      - cyberops_net
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      web:
+        condition: service_started
+
+volumes:
+  mysql_data:
+  redis_data:
+  media_data:
+
+networks:
+  cyberops_net:
+    driver: bridge

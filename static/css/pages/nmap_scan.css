@@ -1,0 +1,20 @@
+.page-nmap-scan section { min-width: 0; }
+
+.page-nmap-scan .nmap-setup-warning code {
+    font-family: ui-monospace, monospace;
+    border-radius: 0.25rem;
+    padding: 0.125rem 0.375rem;
+    font-size: 0.75rem;
+}
+
+.page-nmap-scan .nmap-setup-warning .material-symbols-outlined.text-amber-400 {
+    color: var(--theme-warning-link);
+}
+
+.page-nmap-scan .port-open { color: var(--theme-accent); }
+
+.page-nmap-scan pre.nmap-cmd {
+    font-size: 11px;
+    word-break: break-all;
+    white-space: pre-wrap;
+}

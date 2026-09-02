@@ -1,0 +1,66 @@
+.page-email-osint section {
+    min-width: 0;
+}
+
+.page-email-osint table th,
+.page-email-osint table td {
+    vertical-align: top;
+}
+
+.page-email-osint .scan-bar {
+    display: flex;
+    height: 0.5rem;
+    border-radius: 9999px;
+    overflow: hidden;
+    background: var(--theme-scan-bar-bg);
+}
+
+.page-email-osint .scan-bar span {
+    display: block;
+    min-width: 2px;
+    transition: width 0.3s ease;
+}
+
+.page-email-osint .account-tab {
+    border: 1px solid var(--theme-tab-border);
+    background: var(--theme-tab-bg);
+    color: var(--theme-tab-text);
+    padding: 0.5rem 0.875rem;
+    font-size: 0.75rem;
+    border-radius: 0.375rem;
+    cursor: pointer;
+    transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+
+.page-email-osint .account-tab:hover {
+    border-color: var(--theme-tab-hover-border);
+    color: var(--theme-tab-hover-text);
+}
+
+.page-email-osint .account-tab.is-active {
+    border-color: var(--theme-tab-active-border);
+    background: var(--theme-tab-active-bg);
+    color: var(--theme-tab-active-text);
+}
+
+.page-email-osint .account-panel {
+    display: none;
+}
+
+.page-email-osint .account-panel.is-active {
+    display: block;
+}
+
+.page-email-osint .legend-dot {
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 9999px;
+    flex-shrink: 0;
+}
+
+.page-email-osint .phase-badge {
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--theme-text-faint);
+}

@@ -1,0 +1,50 @@
+.page-username-osint section { min-width: 0; }
+
+.page-username-osint .scan-bar {
+    display: flex;
+    height: 0.5rem;
+    border-radius: 9999px;
+    overflow: hidden;
+    background: var(--theme-scan-bar-bg);
+}
+.page-username-osint .scan-bar span { display: block; min-width: 2px; }
+
+.page-username-osint .account-tab,
+.page-username-osint .cat-filter {
+    border: 1px solid var(--theme-tab-border);
+    background: var(--theme-tab-bg);
+    color: var(--theme-tab-text);
+    padding: 0.5rem 0.875rem;
+    font-size: 0.75rem;
+    border-radius: 0.375rem;
+    cursor: pointer;
+}
+.page-username-osint .account-tab:hover,
+.page-username-osint .cat-filter:hover {
+    border-color: var(--theme-tab-hover-border);
+    color: var(--theme-tab-hover-text);
+}
+.page-username-osint .account-tab.is-active {
+    border-color: var(--theme-tab-active-border);
+    background: var(--theme-tab-active-bg);
+    color: var(--theme-tab-active-text);
+}
+.page-username-osint .cat-filter.is-active {
+    border-color: rgb(52 211 153 / 0.4);
+    background: rgb(16 185 129 / 0.08);
+    color: rgb(167 243 208);
+}
+.page-username-osint .account-panel { display: none; }
+.page-username-osint .account-panel.is-active { display: block; }
+.page-username-osint .legend-dot {
+    width: 0.5rem; height: 0.5rem; border-radius: 9999px; flex-shrink: 0;
+}
+.page-username-osint .source-badge {
+    font-size: 10px;
+    padding: 0.125rem 0.375rem;
+    border-radius: 0.25rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+.page-username-osint tr[data-category] { }
+.page-username-osint tr.is-hidden { display: none; }

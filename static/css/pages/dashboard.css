@@ -1,0 +1,40 @@
+/* Komuta paneli — stat kartları */
+.page-dashboard .stat-card {
+    min-height: 100%;
+}
+
+.page-dashboard .grid > div.bg-zinc-950 {
+    position: relative;
+    overflow: hidden;
+}
+
+.page-dashboard .grid > div.bg-zinc-950::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--theme-accent), transparent);
+    opacity: 0.5;
+}
+
+.page-dashboard .grid > div.bg-zinc-950:nth-child(2)::before {
+    background: linear-gradient(90deg, transparent, #34d399, transparent);
+}
+
+.page-dashboard .grid > div.bg-zinc-950:nth-child(3)::before {
+    background: linear-gradient(90deg, transparent, #fbbf24, transparent);
+}
+
+.page-dashboard table tbody tr:last-child {
+    border-bottom: none;
+}
+
+.page-dashboard a.border.border-zinc-700 {
+    border-radius: var(--theme-radius, 0.5rem);
+}
+
+.page-dashboard a.border.border-zinc-700:hover {
+    background: var(--theme-surface-hover);
+}

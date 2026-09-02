@@ -1,0 +1,18 @@
+.page-image-osint section {
+    min-width: 0;
+}
+
+.page-image-osint .preview-img {
+    max-height: 280px;
+    object-fit: contain;
+}
+
+.page-image-osint .metadata-edit-form input[type="text"],
+.page-image-osint .metadata-edit-form textarea {
+    outline: none;
+}
+
+.page-image-osint .metadata-edit-form input:focus,
+.page-image-osint .metadata-edit-form textarea:focus {
+    border-color: rgb(245 158 11 / 0.5);
+}
